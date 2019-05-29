@@ -502,7 +502,7 @@ func (ic *InfluxCluster) WriteRow(line []byte, precision string) {
         buf.Write([]byte(" "))
     } else if len(lines) == 3 {
         nano = time.Duration(BytesToInt64(lines[length-1]))
-        nano = nano / time.Duration(d) * time.Duration(d)
+        nano = nano * time.Duration(d)
         res := bytes.Join(lines[:length-1], []byte(" "))
         buf.Write(res)
         buf.Write([]byte(" "))
