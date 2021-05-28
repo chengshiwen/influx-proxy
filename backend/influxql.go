@@ -28,6 +28,10 @@ var SupportCmds = util.NewSet(
 	"delete from",
 	"drop series from",
 	"drop measurement",
+	// 添加对保存策略修改的支持 by lyj
+	"create retention policy",
+	"alter retention policy",
+	"drop retention policy",
 )
 
 var (
@@ -314,6 +318,17 @@ func CheckDeleteOrDropMeasurementFromTokens(tokens []string) (check bool) {
 	if len(tokens) >= 3 {
 		stmt := GetHeadStmtFromTokens(tokens, 2)
 		return stmt == "delete from" || stmt == "drop measurement" || stmt == "drop series"
+	}
+	return
+}
+
+/**
+验证保存策略操作 by lyj
+*/
+func CheckRetentionPolicy(tokens []string) (check bool) {
+	if len(tokens) >= 3 {
+		stmt := GetHeadStmtFromTokens(tokens, 3)
+		return stmt == "create retention policy" || stmt == "alter retention policy" || stmt == "drop retention policy"
 	}
 	return
 }
