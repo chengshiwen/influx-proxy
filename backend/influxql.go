@@ -171,7 +171,8 @@ func GetMeasurementFromInfluxQL(q string) (m string, err error) {
 }
 
 func GetDatabaseFromTokens(tokens []string) (m string, err error) {
-	return GetIdentifierFromTokens(tokens, []string{"on", "database"}, getDatabase)
+	// 添加 from 解决数据库名称加在表名前的情况 by lyj
+	return GetIdentifierFromTokens(tokens, []string{"on", "database", "from"}, getDatabase)
 }
 
 func GetMeasurementFromTokens(tokens []string) (m string, err error) {
