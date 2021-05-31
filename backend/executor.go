@@ -101,7 +101,7 @@ func QueryShowQL(w http.ResponseWriter, req *http.Request, ip *Proxy, tokens []s
 }
 
 /**
-  保存策略操作 by lyj
+  for retention policy
 */
 func QueryRetentionPolicyQL(w http.ResponseWriter, req *http.Request, ip *Proxy) (body []byte, err error) {
 	// all circles -> all backends -> create or drop retention policy

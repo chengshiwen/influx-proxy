@@ -28,7 +28,7 @@ var SupportCmds = util.NewSet(
 	"delete from",
 	"drop series from",
 	"drop measurement",
-	// 添加对保存策略修改的支持 by lyj
+	// for retention policy
 	"create retention policy",
 	"alter retention policy",
 	"drop retention policy",
@@ -175,7 +175,7 @@ func GetMeasurementFromInfluxQL(q string) (m string, err error) {
 }
 
 func GetDatabaseFromTokens(tokens []string) (m string, err error) {
-	// 添加 from 解决数据库名称加在表名前的情况 by lyj
+	// For database name after from
 	return GetIdentifierFromTokens(tokens, []string{"on", "database", "from"}, getDatabase)
 }
 
@@ -323,7 +323,7 @@ func CheckDeleteOrDropMeasurementFromTokens(tokens []string) (check bool) {
 }
 
 /**
-验证保存策略操作 by lyj
+for retention policy check
 */
 func CheckRetentionPolicy(tokens []string) (check bool) {
 	if len(tokens) >= 3 {
