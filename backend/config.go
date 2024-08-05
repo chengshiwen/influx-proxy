@@ -58,6 +58,7 @@ type ProxyConfig struct {
 	Username        string          `mapstructure:"username"`
 	Password        string          `mapstructure:"password"`
 	AuthEncrypt     bool            `mapstructure:"auth_encrypt"`
+	PingAuthEnabled bool            `mapstructure:"ping_auth_enabled"`
 	WriteTracing    bool            `mapstructure:"write_tracing"`
 	QueryTracing    bool            `mapstructure:"query_tracing"`
 	PprofEnabled    bool            `mapstructure:"pprof_enabled"`

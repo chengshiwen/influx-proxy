@@ -177,6 +177,7 @@ The configuration settings are as follows:
 * `username`: proxy username, with encryption if auth_encrypt is enabled, default is `empty` which means no auth
 * `password`: proxy password, with encryption if auth_encrypt is enabled, default is `empty` which means no auth
 * `auth_encrypt`: whether to encrypt auth (username/password), default is `false`
+* `ping_auth_enabled`: enable authentication on the `/ping`, default is `false`
 * `write_tracing`: enable logging for the write, default is `false`
 * `query_tracing`: enable logging for the query, default is `false`
 * `pprof_enabled`: enable `/debug/pprof` HTTP endpoint, default is `false`
