@@ -38,7 +38,7 @@ func NewProxy(cfg *ProxyConfig) (ip *Proxy) {
 	for _, db := range cfg.DBList {
 		ip.dbSet.Add(db)
 	}
-	rand.Seed(time.Now().UnixNano())
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 	return
 }
 

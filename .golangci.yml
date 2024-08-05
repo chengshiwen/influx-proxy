@@ -2,7 +2,6 @@ run:
   allow-parallel-runners: true
 linters:
   enable:
-    - golint
+    - revive
   disable:
     - errcheck
-    - typecheck

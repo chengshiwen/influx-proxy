@@ -27,9 +27,9 @@ var (
 	ErrInvalidHashKey        = errors.New("invalid hash_key, require idx, exi, name or url")
 )
 
-type BackendConfig struct { // nolint:golint
+type BackendConfig struct { // nolint:revive
 	Name        string `mapstructure:"name"`
-	Url         string `mapstructure:"url"` // nolint:golint
+	Url         string `mapstructure:"url"` // nolint:revive
 	Username    string `mapstructure:"username"`
 	Password    string `mapstructure:"password"`
 	AuthEncrypt bool   `mapstructure:"auth_encrypt"`

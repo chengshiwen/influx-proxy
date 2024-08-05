@@ -137,7 +137,7 @@ func ScanToken(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	}
 
 	start := 0
-	for ; start < len(data) && data[start] == ' '; start++ {
+	for ; start < len(data) && data[start] == ' '; start++ { //revive:disable-line:empty-block
 	}
 	if start == len(data) {
 		return 0, nil, nil
@@ -309,7 +309,7 @@ func getDatabase(tokens []string, keyword string) (db string) {
 	return
 }
 
-func getRetentionPolicy(tokens []string, keyword string) (rp string) {
+func getRetentionPolicy(tokens []string, _ string) (rp string) {
 	if len(tokens) == 0 {
 		return
 	}
@@ -335,7 +335,7 @@ func getRetentionPolicy(tokens []string, keyword string) (rp string) {
 	return
 }
 
-func getMeasurement(tokens []string, keyword string) (mm string) {
+func getMeasurement(tokens []string, _ string) (mm string) {
 	if len(tokens) == 0 {
 		return
 	}

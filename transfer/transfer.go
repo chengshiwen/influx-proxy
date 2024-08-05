@@ -397,7 +397,7 @@ func (tx *Transfer) runTransfer(cs *CircleState, be *backend.Backend, dbs []stri
 	}
 }
 
-func (tx *Transfer) Rebalance(circleId int, backends []*backend.Backend, dbs []string) { // nolint:golint
+func (tx *Transfer) Rebalance(circleId int, backends []*backend.Backend, dbs []string) { // nolint:revive
 	tx.setLogOutput("rebalance.log")
 	dbs, err := tx.createDatabases(dbs)
 	if err != nil || len(dbs) == 0 {
@@ -424,7 +424,7 @@ func (tx *Transfer) Rebalance(circleId int, backends []*backend.Backend, dbs []s
 	tlog.Printf("rebalance done: circle %d", circleId)
 }
 
-func (tx *Transfer) runRebalance(cs *CircleState, be *backend.Backend, db string, meas string, args []interface{}) (require bool) {
+func (tx *Transfer) runRebalance(cs *CircleState, be *backend.Backend, db string, meas string, _ []interface{}) (require bool) {
 	key := backend.GetKey(db, meas)
 	dst := cs.GetBackend(key)
 	require = dst.Url != be.Url
@@ -434,7 +434,7 @@ func (tx *Transfer) runRebalance(cs *CircleState, be *backend.Backend, db string
 	return
 }
 
-func (tx *Transfer) Recovery(fromCircleId, toCircleId int, backendUrls []string, dbs []string) { // nolint:golint
+func (tx *Transfer) Recovery(fromCircleId, toCircleId int, backendUrls []string, dbs []string) { // nolint:revive
 	tx.setLogOutput("recovery.log")
 	dbs, err := tx.createDatabases(dbs)
 	if err != nil || len(dbs) == 0 {
@@ -453,7 +453,7 @@ func (tx *Transfer) Recovery(fromCircleId, toCircleId int, backendUrls []string,
 	tx.broadcastTransferring(tcs, true)
 	defer tx.broadcastTransferring(tcs, false)
 
-	backendUrlSet := util.NewSet() // nolint:golint
+	backendUrlSet := util.NewSet() // nolint:revive
 	if len(backendUrls) != 0 {
 		for _, u := range backendUrls {
 			backendUrlSet.Add(u)
@@ -474,7 +474,7 @@ func (tx *Transfer) Recovery(fromCircleId, toCircleId int, backendUrls []string,
 
 func (tx *Transfer) runRecovery(fcs *CircleState, be *backend.Backend, db string, meas string, args []interface{}) (require bool) {
 	tcs := args[0].(*CircleState)
-	backendUrlSet := args[1].(util.Set) // nolint:golint
+	backendUrlSet := args[1].(util.Set) // nolint:revive
 	key := backend.GetKey(db, meas)
 	dst := tcs.GetBackend(key)
 	require = backendUrlSet[dst.Url]
@@ -531,7 +531,7 @@ func (tx *Transfer) runResync(cs *CircleState, be *backend.Backend, db string, m
 	return
 }
 
-func (tx *Transfer) Cleanup(circleId int) { // nolint:golint
+func (tx *Transfer) Cleanup(circleId int) { // nolint:revive
 	tx.setLogOutput("cleanup.log")
 	var err error
 	tx.pool, err = ants.NewPool(tx.Worker)
@@ -558,7 +558,7 @@ func (tx *Transfer) Cleanup(circleId int) { // nolint:golint
 	tlog.Printf("cleanup done: circle %d", circleId)
 }
 
-func (tx *Transfer) runCleanup(cs *CircleState, be *backend.Backend, db string, meas string, args []interface{}) (require bool) {
+func (tx *Transfer) runCleanup(cs *CircleState, be *backend.Backend, db string, meas string, _ []interface{}) (require bool) {
 	key := backend.GetKey(db, meas)
 	dst := cs.GetBackend(key)
 	require = dst.Url != be.Url

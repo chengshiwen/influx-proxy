@@ -263,10 +263,10 @@ func (ib *Backend) Rewrite() (err error) {
 	case nil:
 	case ErrBadRequest:
 		log.Printf("bad request, drop all data")
-		err = nil
+		// err = nil
 	case ErrNotFound:
 		log.Printf("bad backend, drop all data")
-		err = nil
+		// err = nil
 	default:
 		log.Printf("rewrite http error, url: %s, db: %s, rp: %s, plen: %d", ib.Url, db, rp, len(p[1]))
 
@@ -296,7 +296,7 @@ func (ib *Backend) Close() {
 func (ib *Backend) GetHealth(ic *Circle, withStats bool) interface{} {
 	health := struct {
 		Name      string      `json:"name"`
-		Url       string      `json:"url"` // nolint:golint
+		Url       string      `json:"url"` // nolint:revive
 		Active    bool        `json:"active"`
 		Backlog   bool        `json:"backlog"`
 		Rewriting bool        `json:"rewriting"`

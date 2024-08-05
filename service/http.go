@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"mime"
 	"net/http"
@@ -50,7 +50,7 @@ func (mux *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	mux.ServeMux.ServeHTTP(w, r)
 }
 
-type HttpService struct { // nolint:golint
+type HttpService struct { // nolint:revive
 	ip           *backend.Proxy
 	tx           *transfer.Transfer
 	username     string
@@ -61,7 +61,7 @@ type HttpService struct { // nolint:golint
 	pprofEnabled bool
 }
 
-func NewHttpService(cfg *backend.ProxyConfig) (hs *HttpService) { // nolint:golint
+func NewHttpService(cfg *backend.ProxyConfig) (hs *HttpService) { // nolint:revive
 	ip := backend.NewProxy(cfg)
 	hs = &HttpService{
 		ip:           ip,
@@ -100,7 +100,7 @@ func (hs *HttpService) Register(mux *ServeMux) {
 	}
 }
 
-func (hs *HttpService) HandlerPing(w http.ResponseWriter, req *http.Request) {
+func (hs *HttpService) HandlerPing(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -137,7 +137,7 @@ func (hs *HttpService) HandlerQueryV2(w http.ResponseWriter, req *http.Request) 
 		hs.WriteError(w, req, http.StatusBadRequest, err.Error())
 		return
 	}
-	rbody, err := ioutil.ReadAll(req.Body)
+	rbody, err := io.ReadAll(req.Body)
 	if err != nil {
 		hs.WriteError(w, req, http.StatusBadRequest, err.Error())
 		return
@@ -164,7 +164,7 @@ func (hs *HttpService) HandlerQueryV2(w http.ResponseWriter, req *http.Request) 
 		return
 	}
 
-	req.Body = ioutil.NopCloser(bytes.NewBuffer(rbody))
+	req.Body = io.NopCloser(bytes.NewBuffer(rbody))
 	err = hs.ip.QueryFlux(w, req, qr)
 	if err != nil {
 		log.Printf("flux query error: %s, query: %s, spec: %s, client: %s", err, qr.Query, qr.Spec, req.RemoteAddr)
@@ -245,7 +245,7 @@ func (hs *HttpService) handlerWrite(db, rp, precision string, w http.ResponseWri
 		defer b.Close()
 		body = b
 	}
-	p, err := ioutil.ReadAll(body)
+	p, err := io.ReadAll(body)
 	if err != nil {
 		hs.WriteError(w, req, http.StatusBadRequest, err.Error())
 		return
@@ -328,7 +328,7 @@ func (hs *HttpService) HandlerRebalance(w http.ResponseWriter, req *http.Request
 		return
 	}
 
-	circleId, err := hs.formCircleId(req, "circle_id") // nolint:golint
+	circleId, err := hs.formCircleId(req, "circle_id") // nolint:revive
 	if err != nil {
 		hs.WriteError(w, req, http.StatusBadRequest, err.Error())
 		return
@@ -382,12 +382,12 @@ func (hs *HttpService) HandlerRecovery(w http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	fromCircleId, err := hs.formCircleId(req, "from_circle_id") // nolint:golint
+	fromCircleId, err := hs.formCircleId(req, "from_circle_id") // nolint:revive
 	if err != nil {
 		hs.WriteError(w, req, http.StatusBadRequest, err.Error())
 		return
 	}
-	toCircleId, err := hs.formCircleId(req, "to_circle_id") // nolint:golint
+	toCircleId, err := hs.formCircleId(req, "to_circle_id") // nolint:revive
 	if err != nil {
 		hs.WriteError(w, req, http.StatusBadRequest, err.Error())
 		return
@@ -456,7 +456,7 @@ func (hs *HttpService) HandlerCleanup(w http.ResponseWriter, req *http.Request) 
 		return
 	}
 
-	circleId, err := hs.formCircleId(req, "circle_id") // nolint:golint
+	circleId, err := hs.formCircleId(req, "circle_id") // nolint:revive
 	if err != nil {
 		hs.WriteError(w, req, http.StatusBadRequest, err.Error())
 		return
@@ -510,7 +510,7 @@ func (hs *HttpService) HandlerTransferState(w http.ResponseWriter, req *http.Req
 			state["resyncing"] = resyncing
 		}
 		if req.FormValue("circle_id") != "" || req.FormValue("transferring") != "" {
-			circleId, err := hs.formCircleId(req, "circle_id") // nolint:golint
+			circleId, err := hs.formCircleId(req, "circle_id") // nolint:revive
 			if err != nil {
 				hs.WriteError(w, req, http.StatusBadRequest, err.Error())
 				return
@@ -543,7 +543,7 @@ func (hs *HttpService) HandlerTransferStats(w http.ResponseWriter, req *http.Req
 		return
 	}
 
-	circleId, err := hs.formCircleId(req, "circle_id") // nolint:golint
+	circleId, err := hs.formCircleId(req, "circle_id") // nolint:revive
 	if err != nil {
 		hs.WriteError(w, req, http.StatusBadRequest, err.Error())
 		return
@@ -568,7 +568,7 @@ func (hs *HttpService) HandlerPromRead(w http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	compressed, err := ioutil.ReadAll(req.Body)
+	compressed, err := io.ReadAll(req.Body)
 	if err != nil {
 		hs.WriteError(w, req, http.StatusInternalServerError, err.Error())
 		return
@@ -604,7 +604,7 @@ func (hs *HttpService) HandlerPromRead(w http.ResponseWriter, req *http.Request)
 		hs.WriteError(w, req, http.StatusBadRequest, err.Error())
 	}
 
-	req.Body = ioutil.NopCloser(bytes.NewBuffer(compressed))
+	req.Body = io.NopCloser(bytes.NewBuffer(compressed))
 	err = hs.ip.ReadProm(w, req, db, metric)
 	if err != nil {
 		log.Printf("prometheus read error: %s, query: %s %s %v, client: %s", err, req.Method, db, q, req.RemoteAddr)
@@ -836,8 +836,8 @@ func (hs *HttpService) formTick(req *http.Request) (int64, error) {
 	return tick, nil
 }
 
-func (hs *HttpService) formCircleId(req *http.Request, key string) (int, error) { // nolint:golint
-	circleId, err := strconv.Atoi(req.FormValue(key)) // nolint:golint
+func (hs *HttpService) formCircleId(req *http.Request, key string) (int, error) { // nolint:revive
+	circleId, err := strconv.Atoi(req.FormValue(key)) // nolint:revive
 	if err != nil || circleId < 0 || circleId >= len(hs.ip.Circles) {
 		return circleId, fmt.Errorf("invalid %s", key)
 	}
