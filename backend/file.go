@@ -6,6 +6,7 @@ package backend
 
 import (
 	"encoding/binary"
+	"errors"
 	"io"
 	"log"
 	"os"
@@ -91,6 +92,12 @@ func (fb *FileBackend) IsData() bool {
 	return fb.dataflag
 }
 
+func (fb *FileBackend) setData(flag bool) {
+	fb.lock.Lock()
+	defer fb.lock.Unlock()
+	fb.dataflag = flag
+}
+
 func (fb *FileBackend) Read() (p []byte, err error) {
 	if !fb.IsData() {
 		return nil, nil
@@ -99,14 +106,22 @@ func (fb *FileBackend) Read() (p []byte, err error) {
 
 	err = binary.Read(fb.consumer, binary.BigEndian, &length)
 	if err != nil {
-		log.Print("read length error: ", err)
+		if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
+			fb.setData(false)
+		} else {
+			log.Print("read length error: ", err)
+		}
 		return
 	}
 	p = make([]byte, length)
 
 	_, err = io.ReadFull(fb.consumer, p)
 	if err != nil {
-		log.Print("read error: ", err)
+		if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
+			fb.setData(false)
+		} else {
+			log.Print("readfull error: ", err)
+		}
 		return
 	}
 	return
@@ -125,7 +140,7 @@ func (fb *FileBackend) RollbackMeta() (err error) {
 	var offset int64
 	err = binary.Read(fb.meta, binary.BigEndian, &offset)
 	if err != nil {
-		if err != io.EOF {
+		if !errors.Is(err, io.EOF) {
 			log.Printf("read meta error: %s %s", fb.filename, err)
 		}
 		return

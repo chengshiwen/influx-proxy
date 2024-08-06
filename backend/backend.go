@@ -218,6 +218,7 @@ func (ib *Backend) RewriteIdle() {
 }
 
 func (ib *Backend) RewriteLoop() {
+	defer ib.SetRewriting(false)
 	for ib.fb.IsData() {
 		if !ib.IsRunning() {
 			return
@@ -232,7 +233,6 @@ func (ib *Backend) RewriteLoop() {
 			continue
 		}
 	}
-	ib.SetRewriting(false)
 }
 
 func (ib *Backend) Rewrite() (err error) {
