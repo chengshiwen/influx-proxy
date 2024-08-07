@@ -184,6 +184,10 @@ The configuration settings are as follows:
 * `https_enabled`: enable https, default is `false`
 * `https_cert`: the ssl certificate to use when https is enabled, default is `empty`
 * `https_key`: use a separate private key location, default is `empty`
+* `tls`: configuration settings for tls
+  * `ciphers`: set of cipher suite IDs to negotiate when https is enabled, referring to [ciphersMap](./backend/tls/tls_config.go#L67), default is `[]`
+  * `min_version`: minimum version of the tls protocol when https is enabled, including `tls1.0`, `tls1.1`, `tls1.2` and `tls1.3`, default is `empty`
+  * `max_version`: maximum version of the tls protocol when https is enabled, including `tls1.0`, `tls1.1`, `tls1.2` and `tls1.3`, default is `empty`
 
 ## Query Commands
 

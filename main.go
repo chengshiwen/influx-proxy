@@ -61,6 +61,9 @@ func main() {
 		IdleTimeout: time.Duration(cfg.IdleTimeout) * time.Second,
 	}
 	if cfg.HTTPSEnabled {
+		if cfg.TLS != nil {
+			server.TLSConfig, _ = cfg.TLS.Parse()
+		}
 		log.Printf("https service start, listen on %s", server.Addr)
 		err = server.ListenAndServeTLS(cfg.HTTPSCert, cfg.HTTPSKey)
 	} else {

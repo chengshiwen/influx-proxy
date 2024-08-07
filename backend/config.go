@@ -8,6 +8,7 @@ import (
 	"errors"
 	"log"
 
+	"github.com/chengshiwen/influx-proxy/backend/tls"
 	"github.com/chengshiwen/influx-proxy/util"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/spf13/viper"
@@ -65,6 +66,7 @@ type ProxyConfig struct {
 	HTTPSEnabled    bool            `mapstructure:"https_enabled"`
 	HTTPSCert       string          `mapstructure:"https_cert"`
 	HTTPSKey        string          `mapstructure:"https_key"`
+	TLS             *tls.Config     `mapstructure:"tls"`
 }
 
 func NewFileConfig(cfgfile string) (cfg *ProxyConfig, err error) {
@@ -140,6 +142,11 @@ func (cfg *ProxyConfig) checkConfig() (err error) {
 	}
 	if cfg.HashKey != "idx" && cfg.HashKey != "exi" && cfg.HashKey != "name" && cfg.HashKey != "url" {
 		return ErrInvalidHashKey
+	}
+	if cfg.TLS != nil {
+		if err := cfg.TLS.Validate(); err != nil {
+			return err
+		}
 	}
 	return
 }

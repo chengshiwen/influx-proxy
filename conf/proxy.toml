@@ -20,6 +20,11 @@ https_enabled = false
 https_cert = ""
 https_key = ""
 
+[tls]
+ciphers = []
+min_version = ""
+max_version = ""
+
 [[circles]]
 name = "circle-1"
 
