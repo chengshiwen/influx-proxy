@@ -11,6 +11,8 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"sort"
+	"strings"
 	"sync"
 
 	"github.com/chengshiwen/influx-proxy/util"
@@ -91,6 +93,14 @@ func QueryShowQL(w http.ResponseWriter, req *http.Request, ip *Proxy, tokens []s
 	// remove support of query parameter `chunked`
 	req.Form.Del("chunked")
 	backends := ip.GetAllBackends()
+	stmt2 := GetHeadStmtFromTokens(tokens, 2)
+	stmt3 := GetHeadStmtFromTokens(tokens, 3)
+	limitOffsetExists, limit, offset := false, 0, 0
+	if (stmt2 == "show measurements" || stmt2 == "show series" || stmt3 == "show field keys" || stmt3 == "show tag keys" || stmt3 == "show tag values") && CheckLimitOrOffsetClause(tokens) {
+		limitOffsetExists = true
+		limit, offset = getLimitOffsetFromTokens(tokens)
+		req.Form.Set("q", removeLimitOffsetClause(req.FormValue("q")))
+	}
 	bodies, inactive, err := QueryInParallel(backends, req, w, true)
 	if err != nil {
 		return
@@ -103,12 +113,10 @@ func QueryShowQL(w http.ResponseWriter, req *http.Request, ip *Proxy, tokens []s
 	}
 
 	var rsp *Response
-	stmt2 := GetHeadStmtFromTokens(tokens, 2)
-	stmt3 := GetHeadStmtFromTokens(tokens, 3)
-	if stmt2 == "show measurements" || stmt2 == "show databases" {
-		rsp, err = reduceByValues(bodies)
+	if stmt2 == "show measurements" || stmt2 == "show series" || stmt2 == "show databases" {
+		rsp, err = reduceByValues(bodies, limitOffsetExists, limit, offset)
 	} else if stmt3 == "show field keys" || stmt3 == "show tag keys" || stmt3 == "show tag values" {
-		rsp, err = reduceBySeries(bodies)
+		rsp, err = reduceBySeries(bodies, limitOffsetExists, limit, offset)
 	}
 	if err != nil {
 		return
@@ -192,7 +200,7 @@ func QueryInParallel(backends []*Backend, req *http.Request, w http.ResponseWrit
 	return
 }
 
-func reduceByValues(bodies [][]byte) (rsp *Response, err error) {
+func reduceByValues(bodies [][]byte, limitOffsetExists bool, limit, offset int) (rsp *Response, err error) {
 	var series models.Rows
 	var values [][]interface{}
 	valuesMap := make(map[string][]interface{})
@@ -214,6 +222,12 @@ func reduceByValues(bodies [][]byte) (rsp *Response, err error) {
 			values = append(values, value)
 		}
 		if len(values) > 0 {
+			values, err = sortLimitOffset(values, limitOffsetExists, limit, offset)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if len(values) > 0 {
 			series[0].Values = values
 		} else {
 			series = nil
@@ -222,7 +236,7 @@ func reduceByValues(bodies [][]byte) (rsp *Response, err error) {
 	return ResponseFromSeries(series), nil
 }
 
-func reduceBySeries(bodies [][]byte) (rsp *Response, err error) {
+func reduceBySeries(bodies [][]byte, limitOffsetExists bool, limit, offset int) (rsp *Response, err error) {
 	var series models.Rows
 	seriesMap := make(map[string]*models.Row)
 	for _, b := range bodies {
@@ -235,7 +249,44 @@ func reduceBySeries(bodies [][]byte) (rsp *Response, err error) {
 		}
 	}
 	for _, serie := range seriesMap {
-		series = append(series, serie)
+		if len(serie.Values) > 0 {
+			serie.Values, err = sortLimitOffset(serie.Values, limitOffsetExists, limit, offset)
+			if err != nil {
+				return nil, err
+			}
+			if len(serie.Values) > 0 {
+				series = append(series, serie)
+			}
+		}
+	}
+	if len(series) > 1 {
+		sort.SliceStable(series, func(i, j int) bool {
+			return strings.Compare(series[i].Name, series[j].Name) < 0
+		})
 	}
 	return ResponseFromSeries(series), nil
+}
+
+func sortLimitOffset(source [][]interface{}, limitOffsetExists bool, limit, offset int) (target [][]interface{}, err error) {
+	if len(source) > 1 {
+		sort.SliceStable(source, func(i, j int) bool {
+			return strings.Compare(source[i][0].(string), source[j][0].(string)) < 0
+		})
+	}
+	if limitOffsetExists {
+		if offset > 0 {
+			if offset >= len(source) {
+				source = nil
+			} else {
+				source = source[offset:]
+			}
+		}
+		if limit > 0 {
+			if limit < len(source) {
+				source = source[:limit]
+			}
+		}
+		return source, nil
+	}
+	return source, err
 }

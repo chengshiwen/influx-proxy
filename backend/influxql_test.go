@@ -470,3 +470,286 @@ func BenchmarkGetMeasurementFromInfluxQL(b *testing.B) {
 		}
 	}
 }
+
+func TestLimitOffsetClause(t *testing.T) {
+	tests := []struct {
+		name   string
+		line   string
+		want   bool
+		limit  int
+		offset int
+		bare   string
+	}{
+		{
+			name:   "test1",
+			line:   `show measurements limit 1 offset 1`,
+			want:   true,
+			limit:  1,
+			offset: 1,
+			bare:   `show measurements`,
+		},
+		{
+			name:   "test2",
+			line:   `SHOW  MEASUREMENTS  ON  db1  LIMIT  10  OFFSET  20`,
+			want:   true,
+			limit:  10,
+			offset: 20,
+			bare:   `SHOW  MEASUREMENTS  ON  db1`,
+		},
+		{
+			name:   "test3",
+			line:   `SHOW  MEASUREMENTS WHERE "region" = 'uswest' AND "host" = 'serverA' limit 20 offset 10`,
+			want:   true,
+			limit:  20,
+			offset: 10,
+			bare:   `SHOW  MEASUREMENTS WHERE "region" = 'uswest' AND "host" = 'serverA'`,
+		},
+		{
+			name:   "test4",
+			line:   `show MEASUREMENTS WITH  MEASUREMENT =~ /h2o.*/  limit 100 offset 200`,
+			want:   true,
+			limit:  100,
+			offset: 200,
+			bare:   `show MEASUREMENTS WITH  MEASUREMENT =~ /h2o.*/`,
+		},
+		{
+			name:   "test5",
+			line:   `show  MEASUREMENTS  limit 1`,
+			want:   true,
+			limit:  1,
+			offset: 0,
+			bare:   `show  MEASUREMENTS`,
+		},
+		{
+			name:   "test6",
+			line:   `show  MEASUREMENTS offset 10`,
+			want:   true,
+			limit:  0,
+			offset: 10,
+			bare:   `show  MEASUREMENTS`,
+		},
+		{
+			name:   "test7",
+			line:   `show  MEASUREMENTS`,
+			want:   false,
+			limit:  0,
+			offset: 0,
+		},
+		{
+			name:   "test8",
+			line:   `show series limit 1 offset 1`,
+			want:   true,
+			limit:  1,
+			offset: 1,
+			bare:   `show series`,
+		},
+		{
+			name:   "test9",
+			line:   `SHOW  SERIES  ON  db1  LIMIT  10  OFFSET  20`,
+			want:   true,
+			limit:  10,
+			offset: 20,
+			bare:   `SHOW  SERIES  ON  db1`,
+		},
+		{
+			name:   "test10",
+			line:   `SHOW  SERIES WHERE "region" = 'uswest' AND "host" = 'serverA' limit 20 offset 10`,
+			want:   true,
+			limit:  20,
+			offset: 10,
+			bare:   `SHOW  SERIES WHERE "region" = 'uswest' AND "host" = 'serverA'`,
+		},
+		{
+			name:   "test11",
+			line:   `SHOW SERIES   WHERE cpu = 'cpu8'  limit 100 offset 200`,
+			want:   true,
+			limit:  100,
+			offset: 200,
+			bare:   `SHOW SERIES   WHERE cpu = 'cpu8'`,
+		},
+		{
+			name:   "test12",
+			line:   `show  SERIES  limit 1`,
+			want:   true,
+			limit:  1,
+			offset: 0,
+			bare:   `show  SERIES`,
+		},
+		{
+			name:   "test13",
+			line:   `show  SERIES offset 10`,
+			want:   true,
+			limit:  0,
+			offset: 10,
+			bare:   `show  SERIES`,
+		},
+		{
+			name:   "test14",
+			line:   `SHOW  SERIES`,
+			want:   false,
+			limit:  0,
+			offset: 0,
+		},
+		{
+			name:   "test15",
+			line:   `show tag keys limit 1 offset 1`,
+			want:   true,
+			limit:  1,
+			offset: 1,
+			bare:   `show tag keys`,
+		},
+		{
+			name:   "test16",
+			line:   `SHOW  TAG KEYS  ON  db1  LIMIT  10  OFFSET  20`,
+			want:   true,
+			limit:  10,
+			offset: 20,
+			bare:   `SHOW  TAG KEYS  ON  db1`,
+		},
+		{
+			name:   "test17",
+			line:   `SHOW  TAG KEYS WHERE "region" = 'uswest' AND "host" = 'serverA' limit 20 offset 10`,
+			want:   true,
+			limit:  20,
+			offset: 10,
+			bare:   `SHOW  TAG KEYS WHERE "region" = 'uswest' AND "host" = 'serverA'`,
+		},
+		{
+			name:   "test18",
+			line:   `show  TAG KEYS  limit 1`,
+			want:   true,
+			limit:  1,
+			offset: 0,
+			bare:   `show  TAG KEYS`,
+		},
+		{
+			name:   "test19",
+			line:   `show  TAG KEYS offset 10`,
+			want:   true,
+			limit:  0,
+			offset: 10,
+			bare:   `show  TAG KEYS`,
+		},
+		{
+			name:   "test20",
+			line:   `show  TAG KEYS`,
+			want:   false,
+			limit:  0,
+			offset: 0,
+		},
+		{
+			name:   "test21",
+			line:   `show tag values limit 1 offset 1`,
+			want:   true,
+			limit:  1,
+			offset: 1,
+			bare:   `show tag values`,
+		},
+		{
+			name:   "test22",
+			line:   `SHOW  TAG VALUES  ON  db1  LIMIT  10  OFFSET  20`,
+			want:   true,
+			limit:  10,
+			offset: 20,
+			bare:   `SHOW  TAG VALUES  ON  db1`,
+		},
+		{
+			name:   "test23",
+			line:   `SHOW  TAG VALUES WITH KEY = "region" limit 20 offset 10`,
+			want:   true,
+			limit:  20,
+			offset: 10,
+			bare:   `SHOW  TAG VALUES WITH KEY = "region"`,
+		},
+		{
+			name:   "test24",
+			line:   `SHOW  TAG VALUES WITH KEY !~ /.*c.*/  limit 20 offset 10`,
+			want:   true,
+			limit:  20,
+			offset: 10,
+			bare:   `SHOW  TAG VALUES WITH KEY !~ /.*c.*/`,
+		},
+		{
+			name:   "test25",
+			line:   `SHOW  TAG VALUES  WITH KEY IN ("region", "host") WHERE "service" = 'redis' limit 20 offset 10`,
+			want:   true,
+			limit:  20,
+			offset: 10,
+			bare:   `SHOW  TAG VALUES  WITH KEY IN ("region", "host") WHERE "service" = 'redis'`,
+		},
+		{
+			name:   "test26",
+			line:   `show  TAG VALUES  limit 1`,
+			want:   true,
+			limit:  1,
+			offset: 0,
+			bare:   `show  TAG VALUES`,
+		},
+		{
+			name:   "test27",
+			line:   `show  TAG VALUES offset 10`,
+			want:   true,
+			limit:  0,
+			offset: 10,
+			bare:   `show  TAG VALUES`,
+		},
+		{
+			name:   "test28",
+			line:   `show  TAG VALUES`,
+			want:   false,
+			limit:  0,
+			offset: 0,
+		},
+		{
+			name:   "test29",
+			line:   `show field keys limit 1 offset 1`,
+			want:   true,
+			limit:  1,
+			offset: 1,
+			bare:   `show field keys`,
+		},
+		{
+			name:   "test30",
+			line:   `SHOW  FIELD KEYS  ON  db1  LIMIT  10  OFFSET  20`,
+			want:   true,
+			limit:  10,
+			offset: 20,
+			bare:   `SHOW  FIELD KEYS  ON  db1`,
+		},
+		{
+			name:   "test31",
+			line:   `show  FIELD KEYS  limit 1`,
+			want:   true,
+			limit:  1,
+			offset: 0,
+			bare:   `show  FIELD KEYS`,
+		},
+		{
+			name:   "test32",
+			line:   `show  FIELD KEYS offset 10`,
+			want:   true,
+			limit:  0,
+			offset: 10,
+			bare:   `show  FIELD KEYS`,
+		},
+		{
+			name:   "test33",
+			line:   `show  FIELD KEYS`,
+			want:   false,
+			limit:  0,
+			offset: 0,
+		},
+	}
+	for _, tt := range tests {
+		tokens := ScanTokens(tt.line, 0)
+		if want := CheckLimitOrOffsetClause(tokens); want != tt.want {
+			t.Errorf("%v: got %v, want %v", tt.name, want, tt.want)
+		} else if want {
+			if limit, offset := getLimitOffsetFromTokens(tokens); limit != tt.limit || offset != tt.offset {
+				t.Errorf("%v: got %v %v, want %v %v", tt.name, limit, offset, tt.limit, tt.offset)
+			} else if bare := removeLimitOffsetClause(tt.line); bare != tt.bare {
+				t.Errorf("%v: got %v, want %v", tt.name, bare, tt.bare)
+			}
+		}
+	}
+}
