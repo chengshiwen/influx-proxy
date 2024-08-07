@@ -9,6 +9,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/chengshiwen/influx-proxy/backend/tls"
 	"github.com/chengshiwen/influx-proxy/util"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/spf13/viper"
@@ -66,6 +67,7 @@ type ProxyConfig struct {
 	HTTPSEnabled    bool            `mapstructure:"https_enabled"`
 	HTTPSCert       string          `mapstructure:"https_cert"`
 	HTTPSKey        string          `mapstructure:"https_key"`
+	TLS             *tls.Config     `mapstructure:"tls"`
 }
 
 func NewFileConfig(cfgfile string) (cfg *ProxyConfig, err error) {
@@ -148,6 +150,11 @@ func (cfg *ProxyConfig) checkConfig() (err error) {
 	for k, v := range cfg.DBRP.Mapping {
 		if strings.TrimSpace(k) == "" || strings.Count(strings.Trim(v, cfg.DBRP.Separator), cfg.DBRP.Separator) != 1 {
 			return ErrInvalidDBRPMapping
+		}
+	}
+	if cfg.TLS != nil {
+		if err := cfg.TLS.Validate(); err != nil {
+			return err
 		}
 	}
 	return
