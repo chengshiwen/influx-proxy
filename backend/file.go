@@ -2,6 +2,26 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
+/*
+.dat file is composed of data blocks
+┌─────────────────────────┐ ┌─────────────────────────┐
+│         Block 1         │ │         Block 2         │
+└─────────────────────────┘ └─────────────────────────┘
+┌───────────┐┌────────────┐ ┌───────────┐┌────────────┐
+│Block 1 Len││Block 1 Body│ │Block 2 Len││Block 2 Body│
+│  4 bytes  ││  N bytes   │ │  4 bytes  ││  N bytes   │
+└───────────┘└────────────┘ └───────────┘└────────────┘
+
+.rec file records consumer offset
+┌─────────┐
+│  Block  │
+└─────────┘
+┌─────────┐
+│Block Len│
+│ 8 bytes │
+└─────────┘
+*/
+
 package backend
 
 import (
