@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"errors"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/chengshiwen/influx-proxy/util"
@@ -430,4 +431,44 @@ func CheckDeleteOrDropMeasurementFromTokens(tokens []string) (check bool) {
 		return stmt == "delete from" || stmt == "drop measurement" || stmt == "drop series"
 	}
 	return
+}
+
+func CheckLimitOrOffsetClause(tokens []string) (check bool) {
+	for _, element := range tokens {
+		stmt := strings.ToLower(element)
+		if stmt == "limit" || stmt == "offset" {
+			return true
+		}
+	}
+	return false
+}
+
+func getLimitOffsetFromTokens(tokens []string) (limit int, offset int) {
+	for i := 0; i < len(tokens); i++ {
+		stmt := strings.ToLower(tokens[i])
+		if stmt == "limit" && i+1 < len(tokens) {
+			if num, err := strconv.Atoi(tokens[i+1]); err == nil {
+				limit = num
+			}
+		}
+		if stmt == "offset" && i+1 < len(tokens) {
+			if num, err := strconv.Atoi(tokens[i+1]); err == nil {
+				offset = num
+			}
+		}
+	}
+	return limit, offset
+}
+
+func removeLimitOffsetClause(q string) (np string) {
+	lower := strings.ToLower(q)
+	lpos := strings.LastIndex(lower, " limit ")
+	opos := strings.LastIndex(lower, " offset ")
+	if lpos == -1 && opos == -1 {
+		return q
+	}
+	if lpos == -1 || (lpos > opos && opos > -1) {
+		return strings.TrimSpace(q[:opos])
+	}
+	return strings.TrimSpace(q[:lpos])
 }
