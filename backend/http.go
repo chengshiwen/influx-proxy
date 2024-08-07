@@ -42,11 +42,11 @@ type QueryResult struct {
 	Err    error
 }
 
-type HttpBackend struct { // nolint:revive
+type HttpBackend struct { //nolint:all
 	client      *http.Client
 	transport   *http.Transport
 	Name        string
-	Url         string // nolint:revive
+	Url         string //nolint:all
 	username    string
 	password    string
 	authEncrypt bool
@@ -58,7 +58,7 @@ type HttpBackend struct { // nolint:revive
 	writeOnly   bool
 }
 
-func NewHttpBackend(cfg *BackendConfig, pxcfg *ProxyConfig) (hb *HttpBackend) { // nolint:revive
+func NewHttpBackend(cfg *BackendConfig, pxcfg *ProxyConfig) (hb *HttpBackend) { //nolint:all
 	hb = NewSimpleHttpBackend(cfg)
 	hb.client = NewClient(strings.HasPrefix(cfg.Url, "https"), pxcfg.WriteTimeout)
 	hb.interval = pxcfg.CheckInterval
@@ -66,7 +66,7 @@ func NewHttpBackend(cfg *BackendConfig, pxcfg *ProxyConfig) (hb *HttpBackend) { 
 	return
 }
 
-func NewSimpleHttpBackend(cfg *BackendConfig) (hb *HttpBackend) { // nolint:revive
+func NewSimpleHttpBackend(cfg *BackendConfig) (hb *HttpBackend) { //nolint:all
 	hb = &HttpBackend{
 		transport:   NewTransport(strings.HasPrefix(cfg.Url, "https")),
 		Name:        cfg.Name,

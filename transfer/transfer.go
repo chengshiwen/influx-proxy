@@ -397,7 +397,7 @@ func (tx *Transfer) runTransfer(cs *CircleState, be *backend.Backend, dbs []stri
 	}
 }
 
-func (tx *Transfer) Rebalance(circleId int, backends []*backend.Backend, dbs []string) { // nolint:revive
+func (tx *Transfer) Rebalance(circleId int, backends []*backend.Backend, dbs []string) { //nolint:all
 	tx.setLogOutput("rebalance.log")
 	dbs, err := tx.createDatabases(dbs)
 	if err != nil || len(dbs) == 0 {
@@ -434,7 +434,7 @@ func (tx *Transfer) runRebalance(cs *CircleState, be *backend.Backend, db string
 	return
 }
 
-func (tx *Transfer) Recovery(fromCircleId, toCircleId int, backendUrls []string, dbs []string) { // nolint:revive
+func (tx *Transfer) Recovery(fromCircleId, toCircleId int, backendUrls []string, dbs []string) { //nolint:all
 	tx.setLogOutput("recovery.log")
 	dbs, err := tx.createDatabases(dbs)
 	if err != nil || len(dbs) == 0 {
@@ -453,7 +453,7 @@ func (tx *Transfer) Recovery(fromCircleId, toCircleId int, backendUrls []string,
 	tx.broadcastTransferring(tcs, true)
 	defer tx.broadcastTransferring(tcs, false)
 
-	backendUrlSet := util.NewSet() // nolint:revive
+	backendUrlSet := util.NewSet() //nolint:all
 	if len(backendUrls) != 0 {
 		for _, u := range backendUrls {
 			backendUrlSet.Add(u)
@@ -474,7 +474,7 @@ func (tx *Transfer) Recovery(fromCircleId, toCircleId int, backendUrls []string,
 
 func (tx *Transfer) runRecovery(fcs *CircleState, be *backend.Backend, db string, meas string, args []interface{}) (require bool) {
 	tcs := args[0].(*CircleState)
-	backendUrlSet := args[1].(util.Set) // nolint:revive
+	backendUrlSet := args[1].(util.Set) //nolint:all
 	key := backend.GetKey(db, meas)
 	dst := tcs.GetBackend(key)
 	require = backendUrlSet[dst.Url]
@@ -531,7 +531,7 @@ func (tx *Transfer) runResync(cs *CircleState, be *backend.Backend, db string, m
 	return
 }
 
-func (tx *Transfer) Cleanup(circleId int) { // nolint:revive
+func (tx *Transfer) Cleanup(circleId int) { //nolint:all
 	tx.setLogOutput("cleanup.log")
 	var err error
 	tx.pool, err = ants.NewPool(tx.Worker)

@@ -50,7 +50,7 @@ func (mux *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	mux.ServeMux.ServeHTTP(w, r)
 }
 
-type HttpService struct { // nolint:revive
+type HttpService struct { //nolint:all
 	ip              *backend.Proxy
 	tx              *transfer.Transfer
 	username        string
@@ -62,7 +62,7 @@ type HttpService struct { // nolint:revive
 	pprofEnabled    bool
 }
 
-func NewHttpService(cfg *backend.ProxyConfig) (hs *HttpService) { // nolint:revive
+func NewHttpService(cfg *backend.ProxyConfig) (hs *HttpService) { //nolint:all
 	ip := backend.NewProxy(cfg)
 	hs = &HttpService{
 		ip:              ip,
@@ -333,7 +333,7 @@ func (hs *HttpService) HandlerRebalance(w http.ResponseWriter, req *http.Request
 		return
 	}
 
-	circleId, err := hs.formCircleId(req, "circle_id") // nolint:revive
+	circleId, err := hs.formCircleId(req, "circle_id") //nolint:all
 	if err != nil {
 		hs.WriteError(w, req, http.StatusBadRequest, err.Error())
 		return
@@ -387,12 +387,12 @@ func (hs *HttpService) HandlerRecovery(w http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	fromCircleId, err := hs.formCircleId(req, "from_circle_id") // nolint:revive
+	fromCircleId, err := hs.formCircleId(req, "from_circle_id") //nolint:all
 	if err != nil {
 		hs.WriteError(w, req, http.StatusBadRequest, err.Error())
 		return
 	}
-	toCircleId, err := hs.formCircleId(req, "to_circle_id") // nolint:revive
+	toCircleId, err := hs.formCircleId(req, "to_circle_id") //nolint:all
 	if err != nil {
 		hs.WriteError(w, req, http.StatusBadRequest, err.Error())
 		return
@@ -461,7 +461,7 @@ func (hs *HttpService) HandlerCleanup(w http.ResponseWriter, req *http.Request) 
 		return
 	}
 
-	circleId, err := hs.formCircleId(req, "circle_id") // nolint:revive
+	circleId, err := hs.formCircleId(req, "circle_id") //nolint:all
 	if err != nil {
 		hs.WriteError(w, req, http.StatusBadRequest, err.Error())
 		return
@@ -515,7 +515,7 @@ func (hs *HttpService) HandlerTransferState(w http.ResponseWriter, req *http.Req
 			state["resyncing"] = resyncing
 		}
 		if req.FormValue("circle_id") != "" || req.FormValue("transferring") != "" {
-			circleId, err := hs.formCircleId(req, "circle_id") // nolint:revive
+			circleId, err := hs.formCircleId(req, "circle_id") //nolint:all
 			if err != nil {
 				hs.WriteError(w, req, http.StatusBadRequest, err.Error())
 				return
@@ -548,7 +548,7 @@ func (hs *HttpService) HandlerTransferStats(w http.ResponseWriter, req *http.Req
 		return
 	}
 
-	circleId, err := hs.formCircleId(req, "circle_id") // nolint:revive
+	circleId, err := hs.formCircleId(req, "circle_id") //nolint:all
 	if err != nil {
 		hs.WriteError(w, req, http.StatusBadRequest, err.Error())
 		return
@@ -845,8 +845,8 @@ func (hs *HttpService) formTick(req *http.Request) (int64, error) {
 	return tick, nil
 }
 
-func (hs *HttpService) formCircleId(req *http.Request, key string) (int, error) { // nolint:revive
-	circleId, err := strconv.Atoi(req.FormValue(key)) // nolint:revive
+func (hs *HttpService) formCircleId(req *http.Request, key string) (int, error) { //nolint:all
+	circleId, err := strconv.Atoi(req.FormValue(key)) //nolint:all
 	if err != nil || circleId < 0 || circleId >= len(hs.ip.Circles) {
 		return circleId, fmt.Errorf("invalid %s", key)
 	}

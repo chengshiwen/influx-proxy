@@ -12,7 +12,7 @@ import (
 )
 
 type Circle struct {
-	CircleId     int // nolint:revive
+	CircleId     int //nolint:all
 	Name         string
 	Backends     []*Backend
 	router       *consistent.Consistent
@@ -20,7 +20,7 @@ type Circle struct {
 	mapToBackend map[string]*Backend
 }
 
-func NewCircle(cfg *CircleConfig, pxcfg *ProxyConfig, circleId int) (ic *Circle) { // nolint:revive
+func NewCircle(cfg *CircleConfig, pxcfg *ProxyConfig, circleId int) (ic *Circle) { //nolint:all
 	ic = &Circle{
 		CircleId:     circleId,
 		Name:         cfg.Name,
@@ -81,7 +81,7 @@ func (ic *Circle) GetHealth(stats bool) interface{} {
 	}
 	wg.Wait()
 	circle := struct {
-		Id        int    `json:"id"` // nolint:revive
+		Id        int    `json:"id"` //nolint:all
 		Name      string `json:"name"`
 		Active    bool   `json:"active"`
 		WriteOnly bool   `json:"write_only"`
