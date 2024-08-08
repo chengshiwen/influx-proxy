@@ -26,6 +26,7 @@ import (
 	"github.com/chengshiwen/influx-proxy/util"
 	"github.com/gogo/protobuf/proto"
 	"github.com/golang/snappy"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
@@ -96,6 +97,7 @@ func (hs *HttpService) Register(mux *ServeMux) {
 	mux.HandleFunc("/transfer/stats", hs.HandlerTransferStats)
 	mux.HandleFunc("/api/v1/prom/read", hs.HandlerPromRead)
 	mux.HandleFunc("/api/v1/prom/write", hs.HandlerPromWrite)
+	mux.HandleFunc("/metrics", hs.HandlerMetrics)
 	if hs.pprofEnabled {
 		mux.HandleFunc("/debug/pprof/", pprof.Index)
 		mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
@@ -687,6 +689,13 @@ func (hs *HttpService) HandlerPromWrite(w http.ResponseWriter, req *http.Request
 	if err == nil {
 		w.WriteHeader(http.StatusNoContent)
 	}
+}
+
+func (hs *HttpService) HandlerMetrics(w http.ResponseWriter, req *http.Request) {
+	if hs.isAuthEnabled() && hs.pingAuthEnabled && !hs.checkAuth(w, req) {
+		return
+	}
+	promhttp.Handler().ServeHTTP(w, req)
 }
 
 func (hs *HttpService) Write(w http.ResponseWriter, req *http.Request, status int, data interface{}) {

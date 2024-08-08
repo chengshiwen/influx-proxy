@@ -42,6 +42,7 @@ Since the InfluxDB Proxy v1 is limited by the only `ONE` database and the `KEYMA
 * Support both rp and precision parameter when writing data.
 * Support influxdb-java, influxdb shell and grafana.
 * Support prometheus remote read and write.
+* Support prometheus monitor with /metrics.
 * Support authentication and https.
 * Support authentication encryption.
 * Support health status check.
@@ -177,7 +178,7 @@ The configuration settings are as follows:
 * `username`: proxy username, with encryption if auth_encrypt is enabled, default is `empty` which means no auth
 * `password`: proxy password, with encryption if auth_encrypt is enabled, default is `empty` which means no auth
 * `auth_encrypt`: whether to encrypt auth (username/password), default is `false`
-* `ping_auth_enabled`: enable authentication on the `/ping`, default is `false`
+* `ping_auth_enabled`: enable authentication on `/ping` and `/metrics`, default is `false`
 * `write_tracing`: enable logging for the write, default is `false`
 * `query_tracing`: enable logging for the query, default is `false`
 * `pprof_enabled`: enable `/debug/pprof` HTTP endpoint, default is `false`
