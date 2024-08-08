@@ -30,8 +30,11 @@ cpu4 idle=47,system=93i,user="Stephen Chow",admin=true,brief\ desc="the best
 
 curl -i -X POST 'http://127.0.0.1:7076/write?db=db1' --data-binary \
 "measurement\ with\ spaces\,\ commas\ and\ 'quotes','quote\ tag\ key\"=\"quote\ value' \"quote\ field\ key'=16,system=16i
-'measurement\ with\ spaces\,\ commas\ and\ 'quotes'','quote\ tag\ key\"='quote\ value\" \"quote\ field\ key'=74,system=23i"
+'measurement\ with\ spaces\,\ commas\ and\ 'quotes'','quote\ tag\ key\"='quote\ value\" \"quote\ field\ key'=74,system=23i
+measurement\ with\ emoji\ we⛅️ther,location=us-midwest temper🔥ture=82 1465839830100400200
+measurement\ with\ 汉字\ 表,标签=中文 文字=\"测试\",utf8=\"\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e\""
 
 curl -i -X POST 'http://127.0.0.1:7076/write?db=db2' --data-binary \
 'measurement\ with\ spaces\,\ commas\ and\ "quotes",tag\ key\ with\ equals\ \==tag\ value\ with"spaces" field_k\ey\ with\ \=="string field value, multiple backslashes \,\\,\\\,\\\\"
-"measurement\ with\ spaces\,\ commas\ and\ "quotes"",tag\ key\ with\ equals\ \==tag\,value\,with"commas" field_k\ey\ with\ \=="string field value, only \" need be escaped"'
+"measurement\ with\ spaces\,\ commas\ and\ "quotes"",tag\ key\ with\ equals\ \==tag\,value\,with"commas" field_k\ey\ with\ \=="string field value, only \" need be escaped"
+"measurement\ with\ quo⚡️es\ and\ emoji🔥",tag\ key\ with\ sp🚀ces=tag\,value\,with"commas" field_k\ey="string field value, only \" need be esc🍭ped"'

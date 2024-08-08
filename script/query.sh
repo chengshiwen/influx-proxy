@@ -8,8 +8,11 @@
 # curl -X POST 'http://127.0.0.1:7076/api/v2/query' -H 'Content-type: application/vnd.flux' -d 'from(bucket:"db2") |> range(start:0) |> filter(fn: (r) => r._measurement == "cpu4")'
 # curl -X POST 'http://127.0.0.1:7076/api/v2/query' -H 'Content-type: application/vnd.flux' -d "from(bucket:\"db1\") |> range(start:0) |> filter(fn: (r) => r._measurement == \"measurement with spaces, commas and 'quotes'\")"
 # curl -X POST 'http://127.0.0.1:7076/api/v2/query' -H 'Content-type: application/vnd.flux' -d "from(bucket:\"db1\") |> range(start:0) |> filter(fn: (r) => r._measurement == \"'measurement with spaces, commas and 'quotes''\")"
+# curl -X POST 'http://127.0.0.1:7076/api/v2/query' -H 'Content-type: application/vnd.flux' -d "from(bucket:\"db1\") |> range(start:0) |> filter(fn: (r) => r._measurement == \"measurement with emoji we⛅️ther\")"
+# curl -X POST 'http://127.0.0.1:7076/api/v2/query' -H 'Content-type: application/vnd.flux' -d "from(bucket:\"db1\") |> range(start:0) |> filter(fn: (r) => r._measurement == \"measurement with 汉字 表\")"
 # curl -X POST 'http://127.0.0.1:7076/api/v2/query' -H 'Content-type: application/vnd.flux' -d 'from(bucket:"db2") |> range(start:0) |> filter(fn: (r) => r._measurement == "measurement with spaces, commas and \"quotes\"")'
 # curl -X POST 'http://127.0.0.1:7076/api/v2/query' -H 'Content-type: application/vnd.flux' -d 'from(bucket:"db2") |> range(start:0) |> filter(fn: (r) => r._measurement == "\"measurement with spaces, commas and \"quotes\"\"")'
+# curl -X POST 'http://127.0.0.1:7076/api/v2/query' -H 'Content-type: application/vnd.flux' -d 'from(bucket:"db2") |> range(start:0) |> filter(fn: (r) => r._measurement == "\"measurement with quo⚡️es and emoji🔥\"")'
 
 
 # echo ""
@@ -67,8 +70,11 @@ curl -G 'http://127.0.0.1:7076/query?db=db2' --data-urlencode 'q=select * from r
 curl -G 'http://127.0.0.1:7076/query?db=db2' --data-urlencode 'q=select * from rp2.cpu4'
 curl -G 'http://127.0.0.1:7076/query?db=db1' --data-urlencode "q=select * from \"measurement with spaces, commas and 'quotes'\""
 curl -G 'http://127.0.0.1:7076/query?db=db1' --data-urlencode "q=select * from \"'measurement with spaces, commas and 'quotes''\""
+curl -G 'http://127.0.0.1:7076/query?db=db1' --data-urlencode "q=select * from \"measurement with emoji we⛅️ther\""
+curl -G 'http://127.0.0.1:7076/query?db=db1' --data-urlencode "q=select * from \"measurement with 汉字 表\""
 curl -G 'http://127.0.0.1:7076/query?db=db2' --data-urlencode 'q=select * from "measurement with spaces, commas and \"quotes\""'
 curl -G 'http://127.0.0.1:7076/query?db=db2' --data-urlencode 'q=select * from "\"measurement with spaces, commas and \"quotes\"\""'
+curl -G 'http://127.0.0.1:7076/query?db=db2' --data-urlencode 'q=select * from "\"measurement with quo⚡️es and emoji🔥\""'
 
 curl -G 'http://127.0.0.1:7076/query?db=db1' --data-urlencode 'q=show tag keys from cpu1'
 curl -G 'http://127.0.0.1:7076/query' --data-urlencode 'q=show FIELD keys on db1 from cpu2'
@@ -178,16 +184,22 @@ curl -X POST 'http://127.0.0.1:7076/query?db=db2' --data-urlencode 'q=drop measu
 curl -X POST 'http://127.0.0.1:7076/query?db=db2' --data-urlencode 'q=drop series from cpu4'
 curl -X POST 'http://127.0.0.1:7076/query?db=db1' --data-urlencode "q=delete from \"measurement with spaces, commas and 'quotes'\""
 curl -X POST 'http://127.0.0.1:7076/query?db=db1' --data-urlencode "q=drop measurement \"'measurement with spaces, commas and 'quotes''\""
+curl -X POST 'http://127.0.0.1:7076/query?db=db1' --data-urlencode "q=delete from \"measurement with emoji we⛅️ther\""
+curl -X POST 'http://127.0.0.1:7076/query?db=db1' --data-urlencode "q=drop measurement \"measurement with 汉字 表\""
 curl -X POST 'http://127.0.0.1:7076/query?db=db2' --data-urlencode 'q=delete from "measurement with spaces, commas and \"quotes\""'
 curl -X POST 'http://127.0.0.1:7076/query?db=db2' --data-urlencode 'q=drop measurement "\"measurement with spaces, commas and \"quotes\"\""'
+curl -X POST 'http://127.0.0.1:7076/query?db=db2' --data-urlencode 'q=drop measurement "\"measurement with quo⚡️es and emoji🔥\""'
 curl -G 'http://127.0.0.1:7076/query?db=db1' --data-urlencode 'q=select * from cpu1;'
 curl -G 'http://127.0.0.1:7076/query?db=db1' --data-urlencode 'q=select * from cpu2'
 curl -G 'http://127.0.0.1:7076/query?db=db2' --data-urlencode 'q=select * from rp2.cpu3;'
 curl -G 'http://127.0.0.1:7076/query?db=db2' --data-urlencode 'q=select * from rp2.cpu4'
 curl -G 'http://127.0.0.1:7076/query?db=db1' --data-urlencode "q=select * from \"measurement with spaces, commas and 'quotes'\""
 curl -G 'http://127.0.0.1:7076/query?db=db1' --data-urlencode "q=select * from \"'measurement with spaces, commas and 'quotes''\""
+curl -G 'http://127.0.0.1:7076/query?db=db1' --data-urlencode "q=select * from \"measurement with emoji we⛅️ther\""
+curl -G 'http://127.0.0.1:7076/query?db=db1' --data-urlencode "q=select * from \"measurement with 汉字 表\""
 curl -G 'http://127.0.0.1:7076/query?db=db2' --data-urlencode 'q=select * from "measurement with spaces, commas and \"quotes\""'
 curl -G 'http://127.0.0.1:7076/query?db=db2' --data-urlencode 'q=select * from "\"measurement with spaces, commas and \"quotes\"\""'
+curl -G 'http://127.0.0.1:7076/query?db=db2' --data-urlencode 'q=select * from "\"measurement with quo⚡️es and emoji🔥\""'
 curl -X POST 'http://127.0.0.1:7076/query' --data-urlencode 'q=DROP RETENTION POLICY "24h.events" on "db1"'
 curl -G 'http://127.0.0.1:7076/query?db=db1' --data-urlencode 'q=SHOW retention policies'
 curl -X POST 'http://127.0.0.1:7076/query' --data-urlencode 'q=drop database db1'
