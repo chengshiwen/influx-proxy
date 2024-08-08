@@ -172,6 +172,7 @@ The configuration settings are as follows:
 * `flush_time`: default is `1`, wait 1 second write whether point count has bigger than flush_size config
 * `check_interval`: default is `1`, check backend active every 1 second
 * `rewrite_interval`: default is `10`, rewrite every 10 seconds
+* `rewrite_threads`: default is `5`, rewrite under 5 threads
 * `conn_pool_size`: default is `20`, create a connection pool which size is 20
 * `write_timeout`: default is `10`, write timeout until 10 seconds
 * `idle_timeout`: default is `10`, keep-alives wait time until 10 seconds
