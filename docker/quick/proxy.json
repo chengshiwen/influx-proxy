@@ -56,5 +56,10 @@
     "pprof_enabled": false,
     "https_enabled": false,
     "https_cert": "",
-    "https_key": ""
+    "https_key": "",
+    "tls": {
+        "ciphers": [],
+        "min_version": "",
+        "max_version": ""
+    }
 }
