@@ -25,6 +25,7 @@ flush_size: 10000
 flush_time: 1
 check_interval: 1
 rewrite_interval: 10
+rewrite_threads: 5
 conn_pool_size: 20
 write_timeout: 10
 write_tracing: false

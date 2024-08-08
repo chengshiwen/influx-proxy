@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/panjf2000/ants/v2"
+	"golang.org/x/sync/errgroup"
 )
 
 type CacheBuffer struct {
@@ -30,6 +31,7 @@ type Backend struct {
 	flushSize       int
 	flushTime       int
 	rewriteInterval int
+	rewriteThreads  int
 	rewriteTicker   *time.Ticker
 	chWrite         chan *LinePoint
 	chTimer         <-chan time.Time
@@ -43,6 +45,7 @@ func NewBackend(cfg *BackendConfig, pxcfg *ProxyConfig) (ib *Backend) {
 		flushSize:       pxcfg.FlushSize,
 		flushTime:       pxcfg.FlushTime,
 		rewriteInterval: pxcfg.RewriteInterval,
+		rewriteThreads:  pxcfg.RewriteThreads,
 		rewriteTicker:   time.NewTicker(time.Duration(pxcfg.RewriteInterval) * time.Second),
 		chWrite:         make(chan *LinePoint, 16),
 		buffers:         make(map[string]map[string]*CacheBuffer),
@@ -236,15 +239,39 @@ func (ib *Backend) RewriteLoop() {
 }
 
 func (ib *Backend) Rewrite() (err error) {
-	b, err := ib.fb.Read()
+	blocks, err := ib.fb.ReadN(ib.rewriteThreads)
 	if err != nil {
 		log.Print("rewrite read file error: ", err)
 		return
 	}
-	if b == nil {
+	if len(blocks) == 0 {
 		return
 	}
 
+	var g errgroup.Group
+	for _, b := range blocks {
+		b := b
+		g.Go(func() error {
+			return ib.rewrite(b)
+		})
+	}
+
+	if err = g.Wait(); err != nil {
+		err = ib.fb.RollbackMeta()
+		if err != nil {
+			log.Printf("rollback meta error: %s", err)
+		}
+		return
+	}
+
+	err = ib.fb.UpdateMeta()
+	if err != nil {
+		log.Printf("update meta error: %s", err)
+	}
+	return
+}
+
+func (ib *Backend) rewrite(b []byte) (err error) {
 	p := bytes.SplitN(b, []byte{' '}, 3)
 	if len(p) < 3 {
 		log.Print("rewrite read invalid data with length: ", len(p))
@@ -275,17 +302,6 @@ func (ib *Backend) Rewrite() (err error) {
 		err = nil
 	default:
 		log.Printf("rewrite http error, url: %s, org: %s, bucket: %s, plen: %d", ib.Url, org, bucket, len(p[1]))
-
-		err = ib.fb.RollbackMeta()
-		if err != nil {
-			log.Printf("rollback meta error: %s", err)
-		}
-		return
-	}
-
-	err = ib.fb.UpdateMeta()
-	if err != nil {
-		log.Printf("update meta error: %s", err)
 	}
 	return
 }

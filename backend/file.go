@@ -126,7 +126,7 @@ func (fb *FileBackend) Read() (p []byte, err error) {
 
 	err = binary.Read(fb.consumer, binary.BigEndian, &length)
 	if err != nil {
-		if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
+		if errors.Is(err, io.EOF) {
 			fb.setData(false)
 		} else {
 			log.Print("read length error: ", err)
@@ -137,12 +137,26 @@ func (fb *FileBackend) Read() (p []byte, err error) {
 
 	_, err = io.ReadFull(fb.consumer, p)
 	if err != nil {
-		if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
+		if errors.Is(err, io.EOF) {
 			fb.setData(false)
 		} else {
 			log.Print("readfull error: ", err)
 		}
 		return
+	}
+	return
+}
+
+func (fb *FileBackend) ReadN(n int) (blocks [][]byte, err error) {
+	for i := 0; i < n; i++ {
+		p, err := fb.Read()
+		if err != nil {
+			if errors.Is(err, io.EOF) && len(blocks) > 0 {
+				return blocks, nil
+			}
+			return nil, err
+		}
+		blocks = append(blocks, p)
 	}
 	return
 }

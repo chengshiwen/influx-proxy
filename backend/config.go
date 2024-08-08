@@ -56,6 +56,7 @@ type ProxyConfig struct {
 	FlushTime       int             `mapstructure:"flush_time"`
 	CheckInterval   int             `mapstructure:"check_interval"`
 	RewriteInterval int             `mapstructure:"rewrite_interval"`
+	RewriteThreads  int             `mapstructure:"rewrite_threads"`
 	ConnPoolSize    int             `mapstructure:"conn_pool_size"`
 	WriteTimeout    int             `mapstructure:"write_timeout"`
 	WriteTracing    bool            `mapstructure:"write_tracing"`
@@ -107,6 +108,9 @@ func (cfg *ProxyConfig) setDefault() {
 	}
 	if cfg.RewriteInterval <= 0 {
 		cfg.RewriteInterval = 10
+	}
+	if cfg.RewriteThreads <= 0 {
+		cfg.RewriteThreads = 5
 	}
 	if cfg.ConnPoolSize <= 0 {
 		cfg.ConnPoolSize = 20
