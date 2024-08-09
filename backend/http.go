@@ -15,6 +15,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -399,8 +400,13 @@ func (hb *HttpBackend) Query(req *http.Request, w http.ResponseWriter, decompres
 	return
 }
 
-func (hb *HttpBackend) QueryIQL(method, db, q, epoch string) ([]byte, error) {
-	qr := hb.Query(NewQueryRequest(method, db, q, epoch), nil, true)
+func (hb *HttpBackend) QueryChunk(method, db, q, epoch string, chunk int) ([]byte, error) {
+	req := NewQueryRequest(method, db, q, epoch)
+	if chunk > 0 {
+		req.Form.Set("chunked", "true")
+		req.Form.Set("chunk_size", strconv.Itoa(chunk))
+	}
+	qr := hb.Query(req, nil, true)
 	return qr.Body, qr.Err
 }
 

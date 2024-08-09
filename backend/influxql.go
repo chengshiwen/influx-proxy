@@ -434,8 +434,8 @@ func CheckDeleteOrDropMeasurementFromTokens(tokens []string) (check bool) {
 }
 
 func CheckLimitOrOffsetClause(tokens []string) (check bool) {
-	for _, element := range tokens {
-		stmt := strings.ToLower(element)
+	for _, token := range tokens {
+		stmt := strings.ToLower(token)
 		if stmt == "limit" || stmt == "offset" {
 			return true
 		}

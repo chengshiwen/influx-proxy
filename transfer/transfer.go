@@ -286,7 +286,7 @@ func (tx *Transfer) query(ch chan *QueryResult, src *backend.Backend, db, rp, me
 				time.Sleep(time.Duration(RetryInterval) * time.Second)
 				tlog.Printf("transfer query retry: %d, err:%s src:%s db:%s rp:%s meas:%s tick:%d limit:%d offset:%d", i, err, src.Url, db, rp, meas, tick, tx.Limit, offset)
 			}
-			rsp, err = src.QueryIQL("GET", db, q, "ns")
+			rsp, err = src.QueryChunk("GET", db, q, "ns", 0)
 			if err == nil {
 				break
 			}
