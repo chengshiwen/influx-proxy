@@ -6,7 +6,9 @@ package transfer
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -273,37 +275,53 @@ func (tx *Transfer) write(ch chan *QueryResult, dsts []*backend.Backend, db, rp,
 
 func (tx *Transfer) query(ch chan *QueryResult, src *backend.Backend, db, rp, meas string, tick int64) {
 	defer close(ch)
-	for offset := 0; ; offset += tx.Limit {
-		whereClause := ""
-		if tick > 0 {
-			whereClause = fmt.Sprintf("where time >= %ds", tick)
+	var rsp *backend.ChunkedResponse
+	var err error
+	q := fmt.Sprintf("select * from \"%s\".\"%s\"", util.EscapeIdentifier(rp), util.EscapeIdentifier(meas))
+	if tick > 0 {
+		q = fmt.Sprintf("%s where time >= %ds", q, tick)
+	}
+	for i := 0; i <= RetryCount; i++ {
+		if i > 0 {
+			time.Sleep(time.Duration(RetryInterval) * time.Second)
+			tlog.Printf("transfer query retry: %d, err:%s src:%s db:%s rp:%s meas:%s tick:%d limit:%d", i, err, src.Url, db, rp, meas, tick, tx.Limit)
 		}
-		q := fmt.Sprintf("select * from \"%s\".\"%s\" %s order by time desc limit %d offset %d", util.EscapeIdentifier(rp), util.EscapeIdentifier(meas), whereClause, tx.Limit, offset)
-		var rsp []byte
-		var err error
-		for i := 0; i <= RetryCount; i++ {
-			if i > 0 {
-				time.Sleep(time.Duration(RetryInterval) * time.Second)
-				tlog.Printf("transfer query retry: %d, err:%s src:%s db:%s rp:%s meas:%s tick:%d limit:%d offset:%d", i, err, src.Url, db, rp, meas, tick, tx.Limit, offset)
-			}
-			rsp, err = src.QueryChunk("GET", db, q, "ns", 0)
-			if err == nil {
-				break
-			}
+		rsp, err = src.QueryChunk("GET", db, q, "ns", tx.Limit)
+		if err == nil {
+			break
 		}
+	}
+	if err != nil {
+		ch <- &QueryResult{Err: err}
+		return
+	}
+	if rsp == nil {
+		return
+	}
+	defer rsp.Close()
+
+	var r *backend.Response
+	for {
+		r, err = rsp.NextResponse()
 		if err != nil {
+			if err == io.EOF {
+				// End of the streamed response
+				return
+			}
+			// If we got an error while decoding the response, send that back.
 			ch <- &QueryResult{Err: err}
 			return
 		}
-		series, err := backend.SeriesFromResponseBytes(rsp)
-		if err != nil {
-			ch <- &QueryResult{Err: err}
+		if r == nil {
 			return
 		}
-		if len(series) == 0 || len(series[0].Values) == 0 {
+		if len(r.Results) > 0 && len(r.Results[0].Series) > 0 {
+			ch <- &QueryResult{Series: r.Results[0].Series}
+		}
+		if r.Err != "" {
+			ch <- &QueryResult{Err: errors.New(r.Err)}
 			return
 		}
-		ch <- &QueryResult{Series: series}
 	}
 }
 

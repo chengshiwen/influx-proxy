@@ -6,6 +6,11 @@ package backend
 
 import (
 	"bytes"
+	"compress/gzip"
+	"encoding/json"
+	"errors"
+	"io"
+	"strings"
 
 	"github.com/influxdata/influxdb1-client/models"
 	jsoniter "github.com/json-iterator/go"
@@ -87,4 +92,85 @@ func ResponseFromError(err string) (rsp *Response) {
 		Err: err,
 	}
 	return
+}
+
+// duplexReader reads responses and writes it to another writer while
+// satisfying the reader interface.
+type duplexReader struct {
+	r io.ReadCloser
+	w io.Writer
+}
+
+func (r *duplexReader) Read(p []byte) (n int, err error) {
+	n, err = r.r.Read(p)
+	if err == nil {
+		r.w.Write(p[:n])
+	}
+	return n, err
+}
+
+// Close closes the response.
+func (r *duplexReader) Close() error {
+	return r.r.Close()
+}
+
+// ChunkedResponse represents a response from the server that
+// uses chunking to stream the output.
+type ChunkedResponse struct {
+	dec    *json.Decoder
+	duplex *duplexReader
+	buf    bytes.Buffer
+}
+
+// NewChunkedResponse reads a stream and produces responses from the stream.
+func NewChunkedResponse(r io.Reader) *ChunkedResponse {
+	rc, ok := r.(io.ReadCloser)
+	if !ok {
+		rc = io.NopCloser(r)
+	}
+	resp := &ChunkedResponse{}
+	resp.duplex = &duplexReader{r: rc, w: &resp.buf}
+	resp.dec = json.NewDecoder(resp.duplex)
+	resp.dec.UseNumber()
+	return resp
+}
+
+// NextResponse reads the next line of the stream and returns a response.
+func (r *ChunkedResponse) NextResponse() (*Response, error) {
+	var response Response
+	if err := r.dec.Decode(&response); err != nil {
+		if err == io.EOF {
+			return nil, err
+		}
+		// A decoding error happened. This probably means the server crashed
+		// and sent a last-ditch error message to us. Ensure we have read the
+		// entirety of the connection to get any remaining error text.
+		io.Copy(io.Discard, r.duplex)
+		return nil, errors.New(strings.TrimSpace(r.buf.String()))
+	}
+
+	r.buf.Reset()
+	return &response, nil
+}
+
+// Close closes the response.
+func (r *ChunkedResponse) Close() error {
+	return r.duplex.Close()
+}
+
+// chunkReader wraps the gzip reader and body reader.
+type chunkReader struct {
+	gr *gzip.Reader
+	br io.ReadCloser
+}
+
+func (r *chunkReader) Read(p []byte) (n int, err error) {
+	return r.gr.Read(p)
+}
+
+func (r *chunkReader) Close() error {
+	if err := r.gr.Close(); err != nil {
+		return err
+	}
+	return r.br.Close()
 }

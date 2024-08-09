@@ -374,7 +374,7 @@ func (hb *HttpBackend) Query(req *http.Request, w http.ResponseWriter, decompres
 		CopyHeader(w.Header(), resp.Header)
 	}
 
-	respBody := resp.Body
+	body := resp.Body
 	if decompress && resp.Header.Get("Content-Encoding") == "gzip" {
 		b, err := gzip.NewReader(resp.Body)
 		if err != nil {
@@ -383,10 +383,10 @@ func (hb *HttpBackend) Query(req *http.Request, w http.ResponseWriter, decompres
 			return
 		}
 		defer b.Close()
-		respBody = b
+		body = b
 	}
 
-	qr.Body, qr.Err = io.ReadAll(respBody)
+	qr.Body, qr.Err = io.ReadAll(body)
 	if qr.Err != nil {
 		log.Printf("read body error: %s, the query is %s", qr.Err, q)
 		return
@@ -400,14 +400,36 @@ func (hb *HttpBackend) Query(req *http.Request, w http.ResponseWriter, decompres
 	return
 }
 
-func (hb *HttpBackend) QueryChunk(method, db, q, epoch string, chunk int) ([]byte, error) {
+func (hb *HttpBackend) QueryChunk(method, db, q, epoch string, chunk int) (cr *ChunkedResponse, err error) {
 	req := NewQueryRequest(method, db, q, epoch)
+	if hb.username != "" || hb.password != "" {
+		hb.SetBasicAuth(req)
+	}
+	req.Form.Set("chunked", "true")
 	if chunk > 0 {
-		req.Form.Set("chunked", "true")
 		req.Form.Set("chunk_size", strconv.Itoa(chunk))
 	}
-	qr := hb.Query(req, nil, true)
-	return qr.Body, qr.Err
+
+	req.URL, err = url.Parse(hb.Url + "/query?" + req.Form.Encode())
+	if err != nil {
+		log.Print("internal url parse error: ", err)
+		return
+	}
+	resp, err := hb.transport.RoundTrip(req)
+	if err != nil {
+		return
+	}
+
+	body := resp.Body
+	if resp.Header.Get("Content-Encoding") == "gzip" {
+		b, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			log.Printf("unable to decode gzip body: %s", err)
+			return nil, err
+		}
+		body = &chunkReader{gr: b, br: resp.Body}
+	}
+	return NewChunkedResponse(body), nil
 }
 
 func (hb *HttpBackend) GetSeriesValues(db, q string) []string {
