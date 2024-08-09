@@ -29,9 +29,8 @@ var (
 	FieldTypes    = []string{"float", "integer", "string", "boolean"}
 	RetryCount    = 10
 	RetryInterval = 15
-	DefaultWorker = 1
-	DefaultBatch  = 25000
-	DefaultLimit  = 1000000
+	DefaultWorker = 5
+	DefaultBatch  = 20000
 	tlog          = log.New(os.Stdout, "", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 )
 
@@ -51,7 +50,6 @@ type Transfer struct {
 	CircleStates []*CircleState
 	Worker       int
 	Batch        int
-	Limit        int
 	Resyncing    bool
 	HaAddrs      []string
 }
@@ -62,7 +60,6 @@ func NewTransfer(cfg *backend.ProxyConfig, circles []*backend.Circle) (tx *Trans
 		CircleStates: make([]*CircleState, len(cfg.Circles)),
 		Worker:       DefaultWorker,
 		Batch:        DefaultBatch,
-		Limit:        DefaultLimit,
 	}
 	for idx, circfg := range cfg.Circles {
 		tx.CircleStates[idx] = NewCircleState(circfg, circles[idx])
@@ -79,7 +76,6 @@ func (tx *Transfer) resetCircleStates() {
 func (tx *Transfer) resetBasicParam() {
 	tx.Worker = DefaultWorker
 	tx.Batch = DefaultBatch
-	tx.Limit = DefaultLimit
 }
 
 func (tx *Transfer) setLogOutput(name string) {
@@ -242,7 +238,7 @@ func (tx *Transfer) write(ch chan *QueryResult, dsts []*backend.Backend, db, rp,
 			fieldStr := strings.Join(fieldSet, ",")
 			line := fmt.Sprintf("%s %s %v\n", mtagStr, fieldStr, value[0])
 			buf.WriteString(line)
-			if (idx+1)%tx.Batch == 0 || idx+1 == valen {
+			if (idx+1)%DefaultBatch == 0 || idx+1 == valen {
 				p := buf.Bytes()
 				for _, dst := range dsts {
 					dst := dst
@@ -284,9 +280,9 @@ func (tx *Transfer) query(ch chan *QueryResult, src *backend.Backend, db, rp, me
 	for i := 0; i <= RetryCount; i++ {
 		if i > 0 {
 			time.Sleep(time.Duration(RetryInterval) * time.Second)
-			tlog.Printf("transfer query retry: %d, err:%s src:%s db:%s rp:%s meas:%s tick:%d limit:%d", i, err, src.Url, db, rp, meas, tick, tx.Limit)
+			tlog.Printf("transfer query retry: %d, err:%s src:%s db:%s rp:%s meas:%s tick:%d batch:%d", i, err, src.Url, db, rp, meas, tick, tx.Batch)
 		}
-		rsp, err = src.QueryChunk("GET", db, q, "ns", tx.Limit)
+		rsp, err = src.QueryChunk("GET", db, q, "ns", tx.Batch)
 		if err == nil {
 			break
 		}
@@ -326,7 +322,7 @@ func (tx *Transfer) query(ch chan *QueryResult, src *backend.Backend, db, rp, me
 }
 
 func (tx *Transfer) transfer(src *backend.Backend, dsts []*backend.Backend, db, rp, meas string, tick int64) error {
-	ch := make(chan *QueryResult, 4)
+	ch := make(chan *QueryResult, 20)
 	go tx.query(ch, src, db, rp, meas, tick)
 
 	var tagMap util.Set
