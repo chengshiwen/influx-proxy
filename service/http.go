@@ -30,9 +30,9 @@ import (
 )
 
 var (
-	ErrInvalidTick    = errors.New("invalid tick, require non-negative integer")
 	ErrInvalidWorker  = errors.New("invalid worker, require positive integer")
 	ErrInvalidBatch   = errors.New("invalid batch, require positive integer")
+	ErrInvalidTick    = errors.New("invalid tick, require non-negative integer")
 	ErrInvalidHaAddrs = errors.New("invalid ha_addrs, require at least two addresses as <host:port>, comma-separated")
 )
 
@@ -429,12 +429,6 @@ func (hs *HttpService) HandlerResync(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	tick, err := hs.formTick(req)
-	if err != nil {
-		hs.WriteError(w, req, http.StatusBadRequest, err.Error())
-		return
-	}
-
 	for _, cs := range hs.tx.CircleStates {
 		if cs.Transferring {
 			hs.WriteText(w, http.StatusBadRequest, fmt.Sprintf("circle %d is transferring", cs.CircleId))
@@ -446,14 +440,14 @@ func (hs *HttpService) HandlerResync(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = hs.setParam(req)
+	err := hs.setParam(req)
 	if err != nil {
 		hs.WriteError(w, req, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	dbs := hs.formValues(req, "dbs")
-	go hs.tx.Resync(dbs, tick)
+	go hs.tx.Resync(dbs)
 	hs.WriteText(w, http.StatusAccepted, "accepted")
 }
 
@@ -841,18 +835,6 @@ func (hs *HttpService) formBool(req *http.Request, key string) (bool, error) {
 	return strconv.ParseBool(req.FormValue(key))
 }
 
-func (hs *HttpService) formTick(req *http.Request) (int64, error) {
-	str := strings.TrimSpace(req.FormValue("tick"))
-	if str == "" {
-		return 0, nil
-	}
-	tick, err := strconv.ParseInt(str, 10, 64)
-	if err != nil || tick < 0 {
-		return 0, ErrInvalidTick
-	}
-	return tick, nil
-}
-
 func (hs *HttpService) formCircleId(req *http.Request, key string) (int, error) { //nolint:all
 	circleId, err := strconv.Atoi(req.FormValue(key)) //nolint:all
 	if err != nil || circleId < 0 || circleId >= len(hs.ip.Circles) {
@@ -868,6 +850,10 @@ func (hs *HttpService) setParam(req *http.Request) error {
 		return err
 	}
 	err = hs.setBatch(req)
+	if err != nil {
+		return err
+	}
+	err = hs.setTick(req)
 	if err != nil {
 		return err
 	}
@@ -902,6 +888,20 @@ func (hs *HttpService) setBatch(req *http.Request) error {
 		hs.tx.Batch = batch
 	} else {
 		hs.tx.Batch = transfer.DefaultBatch
+	}
+	return nil
+}
+
+func (hs *HttpService) setTick(req *http.Request) error {
+	str := strings.TrimSpace(req.FormValue("tick"))
+	if str != "" {
+		tick, err := strconv.ParseInt(str, 10, 64)
+		if err != nil || tick < 0 {
+			return ErrInvalidTick
+		}
+		hs.tx.Tick = tick
+	} else {
+		hs.tx.Tick = transfer.DefaultTick
 	}
 	return nil
 }
