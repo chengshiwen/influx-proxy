@@ -20,6 +20,7 @@ import (
 type Proxy struct {
 	Circles []*Circle
 	dbSet   util.Set
+	sTpl    *shardTpl
 }
 
 func NewProxy(cfg *ProxyConfig) (ip *Proxy) {
@@ -31,9 +32,11 @@ func NewProxy(cfg *ProxyConfig) (ip *Proxy) {
 	ip = &Proxy{
 		Circles: make([]*Circle, len(cfg.Circles)),
 		dbSet:   util.NewSet(),
+		sTpl:    newShardTpl(cfg.ShardKey),
 	}
 	for idx, circfg := range cfg.Circles {
 		ip.Circles[idx] = NewCircle(circfg, cfg, idx)
+		ip.Circles[idx].getKeyFn = ip.GetKey
 	}
 	for _, db := range cfg.DBList {
 		ip.dbSet.Add(db)
@@ -42,13 +45,8 @@ func NewProxy(cfg *ProxyConfig) (ip *Proxy) {
 	return
 }
 
-func GetKey(db, meas string) string {
-	var b strings.Builder
-	b.Grow(len(db) + len(meas) + 1)
-	b.WriteString(db)
-	b.WriteString(",")
-	b.WriteString(meas)
-	return b.String()
+func (ip *Proxy) GetKey(db, meas string) string {
+	return ip.sTpl.GetKey(db, meas)
 }
 
 func (ip *Proxy) GetBackends(key string) []*Backend {
@@ -189,7 +187,7 @@ func (ip *Proxy) WriteRow(line []byte, db, rp, precision string) {
 		return
 	}
 
-	key := GetKey(db, meas)
+	key := ip.GetKey(db, meas)
 	backends := ip.GetBackends(key)
 	if len(backends) == 0 {
 		log.Printf("write data error: can't get backends, db: %s, meas: %s", db, meas)
@@ -209,7 +207,7 @@ func (ip *Proxy) WritePoints(points []models.Point, db, rp string) error {
 	var err error
 	for _, pt := range points {
 		meas := string(pt.Name())
-		key := GetKey(db, meas)
+		key := ip.GetKey(db, meas)
 		backends := ip.GetBackends(key)
 		if len(backends) == 0 {
 			log.Printf("write point error: can't get backends, db: %s, meas: %s", db, meas)

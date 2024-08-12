@@ -61,7 +61,7 @@ func query(w http.ResponseWriter, req *http.Request, ip *Proxy, key string, fn f
 
 func ReadProm(w http.ResponseWriter, req *http.Request, ip *Proxy, db, meas string) (err error) {
 	// all circles -> backend by key(db,meas) -> select or show
-	key := GetKey(db, meas)
+	key := ip.GetKey(db, meas)
 	fn := func(be *Backend, req *http.Request, w http.ResponseWriter) ([]byte, error) {
 		err = be.ReadProm(req, w)
 		return nil, err
@@ -72,7 +72,7 @@ func ReadProm(w http.ResponseWriter, req *http.Request, ip *Proxy, db, meas stri
 
 func QueryFlux(w http.ResponseWriter, req *http.Request, ip *Proxy, bucket, meas string) (err error) {
 	// all circles -> backend by key(org,bucket,meas) -> query flux
-	key := GetKey(bucket, meas)
+	key := ip.GetKey(bucket, meas)
 	fn := func(be *Backend, req *http.Request, w http.ResponseWriter) ([]byte, error) {
 		err = be.QueryFlux(req, w)
 		return nil, err
@@ -87,7 +87,7 @@ func QueryFromQL(w http.ResponseWriter, req *http.Request, ip *Proxy, tokens []s
 	if err != nil {
 		return nil, ErrGetMeasurement
 	}
-	key := GetKey(db, meas)
+	key := ip.GetKey(db, meas)
 	fn := func(be *Backend, req *http.Request, w http.ResponseWriter) ([]byte, error) {
 		qr := be.Query(req, w, false)
 		return qr.Body, qr.Err
@@ -156,7 +156,7 @@ func QueryDeleteOrDropQL(w http.ResponseWriter, req *http.Request, ip *Proxy, to
 	if err != nil {
 		return nil, err
 	}
-	key := GetKey(db, meas)
+	key := ip.GetKey(db, meas)
 	backends := ip.GetBackends(key)
 	return QueryBackends(backends, req, w)
 }

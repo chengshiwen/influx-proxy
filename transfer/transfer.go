@@ -48,16 +48,18 @@ type Transfer struct {
 	pool         *ants.Pool
 	tlogDir      string
 	CircleStates []*CircleState
+	getKeyFn     func(db, meas string) string
 	Worker       int
 	Batch        int
 	Resyncing    bool
 	HaAddrs      []string
 }
 
-func NewTransfer(cfg *backend.ProxyConfig, circles []*backend.Circle) (tx *Transfer) {
+func NewTransfer(cfg *backend.ProxyConfig, circles []*backend.Circle, getKeyFn func(string, string) string) (tx *Transfer) {
 	tx = &Transfer{
 		tlogDir:      cfg.TLogDir,
 		CircleStates: make([]*CircleState, len(cfg.Circles)),
+		getKeyFn:     getKeyFn,
 		Worker:       DefaultWorker,
 		Batch:        DefaultBatch,
 	}
@@ -439,7 +441,7 @@ func (tx *Transfer) Rebalance(circleId int, backends []*backend.Backend, dbs []s
 }
 
 func (tx *Transfer) runRebalance(cs *CircleState, be *backend.Backend, db string, meas string, _ []interface{}) (require bool) {
-	key := backend.GetKey(db, meas)
+	key := tx.getKeyFn(db, meas)
 	dst := cs.GetBackend(key)
 	require = dst.Url != be.Url
 	if require {
@@ -489,7 +491,7 @@ func (tx *Transfer) Recovery(fromCircleId, toCircleId int, backendUrls []string,
 func (tx *Transfer) runRecovery(fcs *CircleState, be *backend.Backend, db string, meas string, args []interface{}) (require bool) {
 	tcs := args[0].(*CircleState)
 	backendUrlSet := args[1].(util.Set) //nolint:all
-	key := backend.GetKey(db, meas)
+	key := tx.getKeyFn(db, meas)
 	dst := tcs.GetBackend(key)
 	require = backendUrlSet[dst.Url]
 	if require {
@@ -530,7 +532,7 @@ func (tx *Transfer) Resync(dbs []string, tick int64) {
 
 func (tx *Transfer) runResync(cs *CircleState, be *backend.Backend, db string, meas string, args []interface{}) (require bool) {
 	tick := args[0].(int64)
-	key := backend.GetKey(db, meas)
+	key := tx.getKeyFn(db, meas)
 	dsts := make([]*backend.Backend, 0)
 	for _, tcs := range tx.CircleStates {
 		if tcs.CircleId != cs.CircleId {
@@ -573,7 +575,7 @@ func (tx *Transfer) Cleanup(circleId int) { //nolint:all
 }
 
 func (tx *Transfer) runCleanup(cs *CircleState, be *backend.Backend, db string, meas string, _ []interface{}) (require bool) {
-	key := backend.GetKey(db, meas)
+	key := tx.getKeyFn(db, meas)
 	dst := cs.GetBackend(key)
 	require = dst.Url != be.Url
 	if require {

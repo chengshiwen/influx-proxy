@@ -3,6 +3,7 @@ db_list = []
 data_dir = "data"
 tlog_dir = "log"
 hash_key = "idx"
+shard_key = "%db,%mm"
 flush_size = 10000
 flush_time = 1
 check_interval = 1

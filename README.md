@@ -37,6 +37,7 @@ Since the InfluxDB Proxy v1 is limited by the only `ONE` database and the `KEYMA
 * Cache data to file when write failed, then rewrite.
 * Support multiple databases to create and store.
 * Support database sharding with consistent hash.
+* Support custom hash key of database sharding.
 * Support tools to rebalance, recovery, resync and cleanup.
 * Load config file and no longer depend on python and redis.
 * Support both rp and precision parameter when writing data.
@@ -167,7 +168,8 @@ The configuration settings are as follows:
 * `db_list`: database list permitted to access, default is `[]`
 * `data_dir`: data dir to save .dat .rec, default is `data`
 * `tlog_dir`: transfer log dir to rebalance, recovery, resync or cleanup, default is `log`
-* `hash_key`: backend key for consistent hash, including "idx", "exi", "name" or "url", default is `idx`, once changed rebalance operation is necessary
+* `hash_key`: backend key for consistent hash, including `idx`, `exi`, `name`, `url` or `%idx`, default is `idx`, once changed rebalance operation is necessary
+* `shard_key`: data shard key template for hash, which containing `%db` or `%mm`, default is `%db,%mm`, once changed rebalance operation is necessary
 * `flush_size`: default is `10000`, wait 10000 points write
 * `flush_time`: default is `1`, wait 1 second write whether point count has bigger than flush_size config
 * `check_interval`: default is `1`, check backend active every 1 second

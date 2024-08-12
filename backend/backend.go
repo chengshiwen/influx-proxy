@@ -340,7 +340,7 @@ func (ib *Backend) GetHealth(ic *Circle, withStats bool) interface{} {
 			inplace, incorrect := 0, 0
 			measurements := ib.GetMeasurements(db)
 			for _, meas := range measurements {
-				key := GetKey(db, meas)
+				key := ic.getKeyFn(db, meas)
 				nb := ic.GetBackend(key)
 				if nb.Url == ib.Url {
 					inplace++

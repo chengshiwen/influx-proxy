@@ -6,6 +6,7 @@ package backend
 
 import (
 	"strconv"
+	"strings"
 	"sync"
 
 	"stathat.com/c/consistent"
@@ -15,6 +16,7 @@ type Circle struct {
 	CircleId     int //nolint:all
 	Name         string
 	Backends     []*Backend
+	getKeyFn     func(string, string) string
 	router       *consistent.Consistent
 	routerCache  sync.Map
 	mapToBackend map[string]*Backend
@@ -37,26 +39,27 @@ func NewCircle(cfg *CircleConfig, pxcfg *ProxyConfig, circleId int) (ic *Circle)
 }
 
 func (ic *Circle) addRouter(be *Backend, idx int, hashKey string) {
-	if hashKey == "name" {
-		ic.router.Add(be.Name)
-		ic.mapToBackend[be.Name] = be
-	} else if hashKey == "url" {
+	var key string
+	switch hashKey {
+	case HashKeyName:
+		key = be.Name
+	case HashKeyURL:
 		// compatible with version <= 2.3
-		ic.router.Add(be.Url)
-		ic.mapToBackend[be.Url] = be
-	} else if hashKey == "exi" {
+		key = be.Url
+	case HashKeyExi:
 		// exi: extended index, recommended, started with 2.5+
 		// no hash collision will occur before idx <= 100000, which has been tested
-		str := "|" + strconv.Itoa(idx)
-		ic.router.Add(str)
-		ic.mapToBackend[str] = be
-	} else {
-		// idx: default index, compatible with version 2.4, recommended when the number of backends <= 10
+		key = "|" + strconv.Itoa(idx)
+	case HashKeyIdx:
+		// idx: index, compatible with version 2.4, recommended when the number of backends <= 10
 		// each additional backend causes 10% hash collision from 11th backend
-		str := strconv.Itoa(idx)
-		ic.router.Add(str)
-		ic.mapToBackend[str] = be
+		key = strconv.Itoa(idx)
+	default:
+		// %idx: custom template like "backend-%idx"
+		key = strings.ReplaceAll(hashKey, HashKeyVarIdx, strconv.Itoa(idx))
 	}
+	ic.router.Add(key)
+	ic.mapToBackend[key] = be
 }
 
 func (ic *Circle) GetBackend(key string) *Backend {

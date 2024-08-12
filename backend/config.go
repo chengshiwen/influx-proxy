@@ -7,6 +7,7 @@ package backend
 import (
 	"errors"
 	"log"
+	"strings"
 
 	"github.com/chengshiwen/influx-proxy/backend/tls"
 	"github.com/chengshiwen/influx-proxy/util"
@@ -21,11 +22,23 @@ var (
 )
 
 var (
+	HashKeyIdx    = "idx"
+	HashKeyExi    = "exi"
+	HashKeyName   = "name"
+	HashKeyURL    = "url"
+	HashKeyVarIdx = "%idx"
+	ShardKeyVarDb = "%db"
+	ShardKeyVarMm = "%mm"
+	ShardKeyDbMm  = "%db,%mm"
+)
+
+var (
 	ErrEmptyCircles          = errors.New("circles cannot be empty")
 	ErrEmptyBackends         = errors.New("backends cannot be empty")
 	ErrEmptyBackendName      = errors.New("backend name cannot be empty")
 	ErrDuplicatedBackendName = errors.New("backend name duplicated")
-	ErrInvalidHashKey        = errors.New("invalid hash_key, require idx, exi, name or url")
+	ErrInvalidHashKey        = errors.New("invalid hash_key, require idx, exi, name, url or template containing %idx")
+	ErrInvalidShardKey       = errors.New("invalid shard_key, require template containing %db or %mm")
 )
 
 type BackendConfig struct { //nolint:all
@@ -49,6 +62,7 @@ type ProxyConfig struct {
 	DataDir         string          `mapstructure:"data_dir"`
 	TLogDir         string          `mapstructure:"tlog_dir"`
 	HashKey         string          `mapstructure:"hash_key"`
+	ShardKey        string          `mapstructure:"shard_key"`
 	FlushSize       int             `mapstructure:"flush_size"`
 	FlushTime       int             `mapstructure:"flush_time"`
 	CheckInterval   int             `mapstructure:"check_interval"`
@@ -97,7 +111,10 @@ func (cfg *ProxyConfig) setDefault() {
 		cfg.TLogDir = "log"
 	}
 	if cfg.HashKey == "" {
-		cfg.HashKey = "idx"
+		cfg.HashKey = HashKeyIdx
+	}
+	if cfg.ShardKey == "" {
+		cfg.ShardKey = ShardKeyDbMm
 	}
 	if cfg.FlushSize <= 0 {
 		cfg.FlushSize = 10000
@@ -144,8 +161,11 @@ func (cfg *ProxyConfig) checkConfig() (err error) {
 			set.Add(backend.Name)
 		}
 	}
-	if cfg.HashKey != "idx" && cfg.HashKey != "exi" && cfg.HashKey != "name" && cfg.HashKey != "url" {
+	if cfg.HashKey != HashKeyIdx && cfg.HashKey != HashKeyExi && cfg.HashKey != HashKeyName && cfg.HashKey != HashKeyURL && !strings.Contains(cfg.HashKey, HashKeyVarIdx) {
 		return ErrInvalidHashKey
+	}
+	if !strings.Contains(cfg.ShardKey, ShardKeyVarDb) && !strings.Contains(cfg.ShardKey, ShardKeyVarMm) {
+		return ErrInvalidShardKey
 	}
 	if cfg.TLS != nil {
 		if err := cfg.TLS.Validate(); err != nil {
@@ -161,6 +181,7 @@ func (cfg *ProxyConfig) PrintSummary() {
 		log.Printf("circle %d: %d backends loaded", id, len(circle.Backends))
 	}
 	log.Printf("hash key: %s", cfg.HashKey)
+	log.Printf("shard key: %s", cfg.ShardKey)
 	if len(cfg.DBList) > 0 {
 		log.Printf("db list: %v", cfg.DBList)
 	}

@@ -66,7 +66,7 @@ func NewHttpService(cfg *backend.ProxyConfig) (hs *HttpService) { //nolint:all
 	ip := backend.NewProxy(cfg)
 	hs = &HttpService{
 		ip:              ip,
-		tx:              transfer.NewTransfer(cfg, ip.Circles),
+		tx:              transfer.NewTransfer(cfg, ip.Circles, ip.GetKey),
 		username:        cfg.Username,
 		password:        cfg.Password,
 		authEncrypt:     cfg.AuthEncrypt,
@@ -290,7 +290,7 @@ func (hs *HttpService) HandlerReplica(w http.ResponseWriter, req *http.Request) 
 	db := req.URL.Query().Get("db")
 	meas := req.URL.Query().Get("meas")
 	if db != "" && meas != "" {
-		key := backend.GetKey(db, meas)
+		key := hs.ip.GetKey(db, meas)
 		backends := hs.ip.GetBackends(key)
 		data := make([]map[string]interface{}, len(backends))
 		for i, b := range backends {
