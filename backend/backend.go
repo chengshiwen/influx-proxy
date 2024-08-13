@@ -338,9 +338,9 @@ func (ib *Backend) GetHealth(ic *Circle, withStats bool) interface{} {
 		go func(db string) {
 			defer wg.Done()
 			inplace, incorrect := 0, 0
-			measurements := ib.GetMeasurements(db)
-			for _, meas := range measurements {
-				key := ic.getKeyFn(db, meas)
+			mms := ib.GetMeasurements(db)
+			for _, mm := range mms {
+				key := ic.getKeyFn(db, mm)
 				nb := ic.GetBackend(key)
 				if nb.Url == ib.Url {
 					inplace++
@@ -349,7 +349,7 @@ func (ib *Backend) GetHealth(ic *Circle, withStats bool) interface{} {
 				}
 			}
 			smap.Store(db, map[string]int{
-				"measurements": len(measurements),
+				"measurements": len(mms),
 				"inplace":      inplace,
 				"incorrect":    incorrect,
 			})

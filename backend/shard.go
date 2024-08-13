@@ -41,14 +41,14 @@ func newShardTpl(tpl string) *shardTpl {
 	return sTpl
 }
 
-func (sTpl *shardTpl) GetKey(db, meas string) string {
+func (sTpl *shardTpl) GetKey(db, mm string) string {
 	var b strings.Builder
-	b.Grow(len(sTpl.tpl) + (len(db)-len(ShardKeyVarDb))*sTpl.dbCnt + (len(meas)-len(ShardKeyVarMm))*sTpl.mmCnt)
+	b.Grow(len(sTpl.tpl) + (len(db)-len(ShardKeyVarDb))*sTpl.dbCnt + (len(mm)-len(ShardKeyVarMm))*sTpl.mmCnt)
 	for _, item := range sTpl.items {
 		if item == ShardKeyVarDb {
 			b.WriteString(db)
 		} else if item == ShardKeyVarMm {
-			b.WriteString(meas)
+			b.WriteString(mm)
 		} else {
 			b.WriteString(item)
 		}

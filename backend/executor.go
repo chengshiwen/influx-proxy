@@ -59,9 +59,9 @@ func query(w http.ResponseWriter, req *http.Request, ip *Proxy, key string, fn f
 	return nil, ErrBackendsUnavailable
 }
 
-func ReadProm(w http.ResponseWriter, req *http.Request, ip *Proxy, db, meas string) (err error) {
-	// all circles -> backend by key(db,meas) -> select or show
-	key := ip.GetKey(db, meas)
+func ReadProm(w http.ResponseWriter, req *http.Request, ip *Proxy, db, mm string) (err error) {
+	// all circles -> backend by key(db,mm) -> select or show
+	key := ip.GetKey(db, mm)
 	fn := func(be *Backend, req *http.Request, w http.ResponseWriter) ([]byte, error) {
 		err = be.ReadProm(req, w)
 		return nil, err
@@ -70,9 +70,9 @@ func ReadProm(w http.ResponseWriter, req *http.Request, ip *Proxy, db, meas stri
 	return
 }
 
-func QueryFlux(w http.ResponseWriter, req *http.Request, ip *Proxy, bucket, meas string) (err error) {
-	// all circles -> backend by key(org,bucket,meas) -> query flux
-	key := ip.GetKey(bucket, meas)
+func QueryFlux(w http.ResponseWriter, req *http.Request, ip *Proxy, bucket, measurement string) (err error) {
+	// all circles -> backend by key(bucket,measurement) -> query flux
+	key := ip.GetKey(bucket, measurement)
 	fn := func(be *Backend, req *http.Request, w http.ResponseWriter) ([]byte, error) {
 		err = be.QueryFlux(req, w)
 		return nil, err
@@ -82,12 +82,12 @@ func QueryFlux(w http.ResponseWriter, req *http.Request, ip *Proxy, bucket, meas
 }
 
 func QueryFromQL(w http.ResponseWriter, req *http.Request, ip *Proxy, tokens []string, db string) (body []byte, err error) {
-	// all circles -> backend by key(db,meas) -> select or show
-	meas, err := GetMeasurementFromTokens(tokens)
+	// all circles -> backend by key(db,mm) -> select or show
+	mm, err := GetMeasurementFromTokens(tokens)
 	if err != nil {
 		return nil, ErrGetMeasurement
 	}
-	key := ip.GetKey(db, meas)
+	key := ip.GetKey(db, mm)
 	fn := func(be *Backend, req *http.Request, w http.ResponseWriter) ([]byte, error) {
 		qr := be.Query(req, w, false)
 		return qr.Body, qr.Err
@@ -151,12 +151,12 @@ func QueryShowQL(w http.ResponseWriter, req *http.Request, ip *Proxy, tokens []s
 }
 
 func QueryDeleteOrDropQL(w http.ResponseWriter, req *http.Request, ip *Proxy, tokens []string, db string) (body []byte, err error) {
-	// all circles -> backend by key(db,meas) -> delete or drop measurement/series
-	meas, err := GetMeasurementFromTokens(tokens)
+	// all circles -> backend by key(db,mm) -> delete or drop measurement/series
+	mm, err := GetMeasurementFromTokens(tokens)
 	if err != nil {
 		return nil, err
 	}
-	key := ip.GetKey(db, meas)
+	key := ip.GetKey(db, mm)
 	backends := ip.GetBackends(key)
 	return QueryBackends(backends, req, w)
 }

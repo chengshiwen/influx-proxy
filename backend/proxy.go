@@ -45,8 +45,8 @@ func NewProxy(cfg *ProxyConfig) (ip *Proxy) {
 	return
 }
 
-func (ip *Proxy) GetKey(db, meas string) string {
-	return ip.sTpl.GetKey(db, meas)
+func (ip *Proxy) GetKey(db, mm string) string {
+	return ip.sTpl.GetKey(db, mm)
 }
 
 func (ip *Proxy) GetBackends(key string) []*Backend {
@@ -88,11 +88,11 @@ func (ip *Proxy) IsForbiddenDB(db string) bool {
 }
 
 func (ip *Proxy) QueryFlux(w http.ResponseWriter, req *http.Request, qr *QueryRequest) (err error) {
-	var bucket, meas string
+	var bucket, measurement string
 	if qr.Query != "" {
-		bucket, meas, err = ScanQuery(qr.Query)
+		bucket, measurement, err = ScanQuery(qr.Query)
 	} else if qr.Spec != nil {
-		bucket, meas, err = ScanSpec(qr.Spec)
+		bucket, measurement, err = ScanSpec(qr.Spec)
 	}
 	if err != nil {
 		return
@@ -102,10 +102,10 @@ func (ip *Proxy) QueryFlux(w http.ResponseWriter, req *http.Request, qr *QueryRe
 	} else if ip.IsForbiddenDB(bucket) {
 		return fmt.Errorf("database forbidden: %s", bucket)
 	}
-	if meas == "" {
+	if measurement == "" {
 		return ErrGetMeasurement
 	}
-	return QueryFlux(w, req, ip, bucket, meas)
+	return QueryFlux(w, req, ip, bucket, measurement)
 }
 
 func (ip *Proxy) Query(w http.ResponseWriter, req *http.Request) (body []byte, err error) {
@@ -177,20 +177,20 @@ func (ip *Proxy) Write(p []byte, db, rp, precision string) (err error) {
 
 func (ip *Proxy) WriteRow(line []byte, db, rp, precision string) {
 	nanoLine := AppendNano(line, precision)
-	meas, err := ScanKey(nanoLine)
+	mm, err := ScanKey(nanoLine)
 	if err != nil {
 		log.Printf("scan key error: %s", err)
 		return
 	}
-	if !RapidCheck(nanoLine[len(meas):]) {
+	if !RapidCheck(nanoLine[len(mm):]) {
 		log.Printf("invalid format, db: %s, rp: %s, precision: %s, line: %s", db, rp, precision, string(line))
 		return
 	}
 
-	key := ip.GetKey(db, meas)
+	key := ip.GetKey(db, mm)
 	backends := ip.GetBackends(key)
 	if len(backends) == 0 {
-		log.Printf("write data error: can't get backends, db: %s, meas: %s", db, meas)
+		log.Printf("write data error: can't get backends, db: %s, mm: %s", db, mm)
 		return
 	}
 
@@ -206,11 +206,11 @@ func (ip *Proxy) WriteRow(line []byte, db, rp, precision string) {
 func (ip *Proxy) WritePoints(points []models.Point, db, rp string) error {
 	var err error
 	for _, pt := range points {
-		meas := string(pt.Name())
-		key := ip.GetKey(db, meas)
+		mm := string(pt.Name())
+		key := ip.GetKey(db, mm)
 		backends := ip.GetBackends(key)
 		if len(backends) == 0 {
-			log.Printf("write point error: can't get backends, db: %s, meas: %s", db, meas)
+			log.Printf("write point error: can't get backends, db: %s, mm: %s", db, mm)
 			err = ErrEmptyBackends
 			continue
 		}

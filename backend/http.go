@@ -463,13 +463,13 @@ func (hb *HttpBackend) GetMeasurements(db string) []string {
 	return hb.GetSeriesValues(db, "show measurements")
 }
 
-func (hb *HttpBackend) GetTagKeys(db, rp, meas string) []string {
-	return hb.GetSeriesValues(db, fmt.Sprintf("show tag keys from \"%s\".\"%s\"", util.EscapeIdentifier(rp), util.EscapeIdentifier(meas)))
+func (hb *HttpBackend) GetTagKeys(db, rp, mm string) []string {
+	return hb.GetSeriesValues(db, fmt.Sprintf("show tag keys from \"%s\".\"%s\"", util.EscapeIdentifier(rp), util.EscapeIdentifier(mm)))
 }
 
-func (hb *HttpBackend) GetFieldKeys(db, rp, meas string) map[string][]string {
+func (hb *HttpBackend) GetFieldKeys(db, rp, mm string) map[string][]string {
 	fieldKeys := make(map[string][]string)
-	q := fmt.Sprintf("show field keys from \"%s\".\"%s\"", util.EscapeIdentifier(rp), util.EscapeIdentifier(meas))
+	q := fmt.Sprintf("show field keys from \"%s\".\"%s\"", util.EscapeIdentifier(rp), util.EscapeIdentifier(mm))
 	qr := hb.Query(NewQueryRequest("GET", db, q, ""), nil, true)
 	if qr.Err != nil {
 		return fieldKeys
@@ -484,8 +484,8 @@ func (hb *HttpBackend) GetFieldKeys(db, rp, meas string) map[string][]string {
 	return fieldKeys
 }
 
-func (hb *HttpBackend) DropMeasurement(db, meas string) ([]byte, error) {
-	q := fmt.Sprintf("drop measurement \"%s\"", util.EscapeIdentifier(meas))
+func (hb *HttpBackend) DropMeasurement(db, mm string) ([]byte, error) {
+	q := fmt.Sprintf("drop measurement \"%s\"", util.EscapeIdentifier(mm))
 	qr := hb.Query(NewQueryRequest("POST", db, q, ""), nil, true)
 	return qr.Body, qr.Err
 }

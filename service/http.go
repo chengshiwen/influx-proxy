@@ -288,9 +288,13 @@ func (hs *HttpService) HandlerReplica(w http.ResponseWriter, req *http.Request) 
 	}
 
 	db := req.URL.Query().Get("db")
-	meas := req.URL.Query().Get("meas")
-	if db != "" && meas != "" {
-		key := hs.ip.GetKey(db, meas)
+	mm := req.URL.Query().Get("mm")
+	if mm == "" {
+		// compatible with version <= 2.5.11
+		mm = req.URL.Query().Get("meas")
+	}
+	if db != "" && mm != "" {
+		key := hs.ip.GetKey(db, mm)
 		backends := hs.ip.GetBackends(key)
 		data := make([]map[string]interface{}, len(backends))
 		for i, b := range backends {
@@ -302,7 +306,7 @@ func (hs *HttpService) HandlerReplica(w http.ResponseWriter, req *http.Request) 
 		}
 		hs.Write(w, req, http.StatusOK, data)
 	} else {
-		hs.WriteError(w, req, http.StatusBadRequest, "invalid db or meas")
+		hs.WriteError(w, req, http.StatusBadRequest, "invalid db or mm")
 	}
 }
 
