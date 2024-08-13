@@ -32,7 +32,7 @@ import (
 var (
 	ErrInvalidWorker  = errors.New("invalid worker, require positive integer")
 	ErrInvalidBatch   = errors.New("invalid batch, require positive integer")
-	ErrInvalidTick    = errors.New("invalid tick, require non-negative integer")
+	ErrInvalidSince   = errors.New("invalid since, require non-negative integer")
 	ErrInvalidHaAddrs = errors.New("invalid ha_addrs, require at least two addresses as <host:port>, comma-separated")
 )
 
@@ -290,8 +290,7 @@ func (hs *HttpService) HandlerReplica(w http.ResponseWriter, req *http.Request) 
 	db := req.URL.Query().Get("db")
 	mm := req.URL.Query().Get("mm")
 	if mm == "" {
-		// compatible with version <= 2.5.11
-		mm = req.URL.Query().Get("meas")
+		mm = req.URL.Query().Get("meas") // compatible with version <= 2.5.11
 	}
 	if db != "" && mm != "" {
 		key := hs.ip.GetKey(db, mm)
@@ -857,7 +856,7 @@ func (hs *HttpService) setParam(req *http.Request) error {
 	if err != nil {
 		return err
 	}
-	err = hs.setTick(req)
+	err = hs.setSince(req)
 	if err != nil {
 		return err
 	}
@@ -896,16 +895,19 @@ func (hs *HttpService) setBatch(req *http.Request) error {
 	return nil
 }
 
-func (hs *HttpService) setTick(req *http.Request) error {
-	str := strings.TrimSpace(req.FormValue("tick"))
+func (hs *HttpService) setSince(req *http.Request) error {
+	str := strings.TrimSpace(req.FormValue("since"))
+	if str == "" {
+		str = strings.TrimSpace(req.FormValue("tick")) // compatible with version <= 2.5.11
+	}
 	if str != "" {
-		tick, err := strconv.ParseInt(str, 10, 64)
-		if err != nil || tick < 0 {
-			return ErrInvalidTick
+		since, err := strconv.ParseInt(str, 10, 64)
+		if err != nil || since < 0 {
+			return ErrInvalidSince
 		}
-		hs.tx.Tick = tick
+		hs.tx.Since = since
 	} else {
-		hs.tx.Tick = transfer.DefaultTick
+		hs.tx.Since = transfer.DefaultSince
 	}
 	return nil
 }

@@ -31,7 +31,7 @@ var (
 	RetryInterval = 15
 	DefaultWorker = 5
 	DefaultBatch  = 20000
-	DefaultTick   = int64(0)
+	DefaultSince  = int64(0)
 	tlog          = log.New(os.Stdout, "", log.LstdFlags|log.Lmicroseconds|log.Lshortfile)
 )
 
@@ -52,7 +52,7 @@ type Transfer struct {
 	getKeyFn     func(string, string) string
 	Worker       int
 	Batch        int
-	Tick         int64
+	Since        int64
 	Resyncing    bool
 	HaAddrs      []string
 }
@@ -64,7 +64,7 @@ func NewTransfer(cfg *backend.ProxyConfig, circles []*backend.Circle, getKeyFn f
 		getKeyFn:     getKeyFn,
 		Worker:       DefaultWorker,
 		Batch:        DefaultBatch,
-		Tick:         DefaultTick,
+		Since:        DefaultSince,
 	}
 	for idx, circfg := range cfg.Circles {
 		tx.CircleStates[idx] = NewCircleState(circfg, circles[idx])
@@ -81,7 +81,7 @@ func (tx *Transfer) resetCircleStates() {
 func (tx *Transfer) resetBasicParam() {
 	tx.Worker = DefaultWorker
 	tx.Batch = DefaultBatch
-	tx.Tick = DefaultTick
+	tx.Since = DefaultSince
 }
 
 func (tx *Transfer) setLogOutput(name string) {
@@ -280,13 +280,13 @@ func (tx *Transfer) query(ch chan *QueryResult, src *backend.Backend, db, rp, mm
 	var rsp *backend.ChunkedResponse
 	var err error
 	q := fmt.Sprintf("select * from \"%s\".\"%s\"", util.EscapeIdentifier(rp), util.EscapeIdentifier(mm))
-	if tx.Tick > 0 {
-		q = fmt.Sprintf("%s where time >= %ds", q, tx.Tick)
+	if tx.Since > 0 {
+		q = fmt.Sprintf("%s where time >= %ds", q, tx.Since)
 	}
 	for i := 0; i <= RetryCount; i++ {
 		if i > 0 {
 			time.Sleep(time.Duration(RetryInterval) * time.Second)
-			tlog.Printf("transfer query retry: %d, err:%s src:%s db:%s rp:%s mm:%s batch:%d tick:%d", i, err, src.Url, db, rp, mm, tx.Batch, tx.Tick)
+			tlog.Printf("transfer query retry: %d, err:%s src:%s db:%s rp:%s mm:%s batch:%d since:%d", i, err, src.Url, db, rp, mm, tx.Batch, tx.Since)
 		}
 		rsp, err = src.QueryChunk("GET", db, q, "ns", tx.Batch)
 		if err == nil {
@@ -359,9 +359,9 @@ func (tx *Transfer) submitTransfer(cs *CircleState, src *backend.Backend, dsts [
 			defer cs.wg.Done()
 			err := tx.transfer(src, dsts, db, rp, mm)
 			if err == nil {
-				tlog.Printf("transfer done, src:%s dst:%v db:%s rp:%s mm:%s batch:%d tick:%d", src.Url, getBackendUrls(dsts), db, rp, mm, tx.Batch, tx.Tick)
+				tlog.Printf("transfer done, src:%s dst:%v db:%s rp:%s mm:%s batch:%d since:%d", src.Url, getBackendUrls(dsts), db, rp, mm, tx.Batch, tx.Since)
 			} else {
-				tlog.Printf("transfer error: %s, src:%s dst:%v db:%s rp:%s mm:%s batch:%d tick:%d", err, src.Url, getBackendUrls(dsts), db, rp, mm, tx.Batch, tx.Tick)
+				tlog.Printf("transfer error: %s, src:%s dst:%v db:%s rp:%s mm:%s batch:%d since:%d", err, src.Url, getBackendUrls(dsts), db, rp, mm, tx.Batch, tx.Since)
 			}
 		})
 	}
