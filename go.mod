@@ -10,7 +10,7 @@ require (
 	github.com/panjf2000/ants/v2 v2.10.0
 	github.com/prometheus/client_golang v1.19.1
 	github.com/spf13/viper v1.19.0
-	golang.org/x/sync v0.6.0
+	golang.org/x/sync v0.8.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	stathat.com/c/consistent v1.0.0
 )
