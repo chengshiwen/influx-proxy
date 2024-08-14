@@ -39,7 +39,7 @@ test:
 	go test -v github.com/chengshiwen/influx-proxy/backend
 
 bench:
-	go test -bench=. -run=none github.com/chengshiwen/influx-proxy/backend
+	go test -bench=. -benchmem -run=none github.com/chengshiwen/influx-proxy/backend
 
 run:
 	go run main.go
