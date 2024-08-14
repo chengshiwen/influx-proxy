@@ -37,7 +37,7 @@ Since the InfluxDB Proxy v1 is limited by the only `ONE` database and the `KEYMA
 * Cache data to file when write failed, then rewrite.
 * Support multiple databases to create and store.
 * Support database sharding with consistent hash.
-* Support custom hash key of database sharding.
+* Support custom hash key and shard key of database sharding.
 * Support tools to rebalance, recovery, resync and cleanup.
 * Load config file and no longer depend on python and redis.
 * Support both rp and precision parameter when writing data.
@@ -168,8 +168,8 @@ The configuration settings are as follows:
 * `db_list`: database list permitted to access, default is `[]`
 * `data_dir`: data dir to save .dat .rec, default is `data`
 * `tlog_dir`: transfer log dir to rebalance, recovery, resync or cleanup, default is `log`
-* `hash_key`: backend key for consistent hash, including `idx`, `exi`, `name`, `url` or `%idx`, default is `idx`, once changed rebalance operation is necessary
-* `shard_key`: data shard key template for hash, which containing `%db` or `%mm`, default is `%db,%mm`, once changed rebalance operation is necessary
+* `hash_key`: backend key for consistent hash, including `idx`, `exi`, `name`, `url` or template containing `%idx`, like `backend-%idx`, default is `idx`, once changed rebalance operation or [`influx-tool transfer`](https://github.com/chengshiwen/influx-tool#transfer) is necessary
+* `shard_key`: data shard key template for hash, which containing `%db` or `%mm`, like `shard-%db-%mm`, default is `%db,%mm` which means `database,measurement`, once changed rebalance operation or [`influx-tool transfer`](https://github.com/chengshiwen/influx-tool#transfer) is necessary
 * `flush_size`: default is `10000`, wait 10000 points write
 * `flush_time`: default is `1`, wait 1 second write whether point count has bigger than flush_size config
 * `check_interval`: default is `1`, check backend active every 1 second
@@ -192,6 +192,31 @@ The configuration settings are as follows:
   * `ciphers`: set of cipher suite IDs to negotiate when https is enabled, referring to [ciphersMap](./backend/tls/tls_config.go#L67), default is `[]`
   * `min_version`: minimum version of the tls protocol when https is enabled, including `tls1.0`, `tls1.1`, `tls1.2` and `tls1.3`, default is `empty`
   * `max_version`: maximum version of the tls protocol when https is enabled, including `tls1.0`, `tls1.1`, `tls1.2` and `tls1.3`, default is `empty`
+
+## Hash and Shard Key
+
+`hash_key` and `shard_key` together control which influxdb instance the data should be written to.
+`hash_key` is backend key for consistent hash, including `idx`, `exi`, `name`, `url` or template containing `%idx` (`%idx` is the index of the influxdb backend in the circle), like `backend-%idx`.
+`shard_key` is data shard key template for hash, which containing `%db` or `%mm` (`%db` and `%mm` are the database and measurement in the data respectively), like `shard-%db-%mm`.
+
+To avoid data skew (i.e. uneven data distribution), both `hash_key` and `shard_key` need to be set appropriately. Before setting, [`influx-tool hashdist`](https://github.com/chengshiwen/influx-tool#hashdist) can help simulate and test the hash distribution. For example, execute
+
+```sh
+$ head -n 3 table.csv
+db1,cpu1
+db1,cpu2
+db2,cpu3
+$ influx-tool hashdist -n 6 -k backend-%idx -K shard-%db-%mm -f table.csv -D -
+node total: 6, hash key: backend-%idx, shard key: shard-%db-%mm, total hits: 40
+node index: 0, hits: 5, percent: 12.5%, expect: 16.7%
+node index: 1, hits: 5, percent: 12.5%, expect: 16.7%
+node index: 2, hits: 9, percent: 22.5%, expect: 16.7%
+node index: 3, hits: 7, percent: 17.5%, expect: 16.7%
+node index: 4, hits: 7, percent: 17.5%, expect: 16.7%
+node index: 5, hits: 7, percent: 17.5%, expect: 16.7%
+```
+
+NOTE: Once one of `hash_key` and `shard_key` is changed, rebalance operation or [`influx-tool transfer`](https://github.com/chengshiwen/influx-tool#transfer) is necessary.
 
 ## Query Commands
 
