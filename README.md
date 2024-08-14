@@ -2,7 +2,7 @@
 
 This project adds a basic high availability and consistent hash layer to InfluxDB v2.
 
-NOTE: influx-proxy must be built with Go 1.16+ with Go module support, don't implement udp.
+NOTE: influx-proxy must be built with Go 1.21+ with Go module support, don't implement udp.
 
 NOTE: [InfluxDB Cluster](https://github.com/chengshiwen/influxdb-cluster) - open source alternative to [InfluxDB Enterprise](https://docs.influxdata.com/enterprise_influxdb/v1.8/) has been released, which is better than InfluxDB Proxy.
 
@@ -39,7 +39,7 @@ Since the InfluxDB Proxy v1 is limited by the only `ONE` database and the `KEYMA
 
 ## Requirements
 
-* Golang >= 1.16 with Go module support
+* Golang >= 1.21 with Go module support
 * InfluxDB >= 2.0 (For InfluxDB 1.x, please visit branch [master](https://github.com/chengshiwen/influx-proxy/tree/master))
 
 ## Usage

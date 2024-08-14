@@ -45,7 +45,7 @@ run:
 	go run main.go
 
 lint:
-	golangci-lint run --enable=golint --disable=errcheck --disable=typecheck && goimports -l -w . && go fmt ./... && go vet ./...
+	golangci-lint run --config .golangci.yml && goimports -l -w . && go fmt ./... && go vet ./...
 
 down:
 	go list ./... && go mod verify
