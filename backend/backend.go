@@ -318,7 +318,7 @@ func (ib *Backend) Close() {
 func (ib *Backend) GetHealth() interface{} {
 	health := struct {
 		Name      string `json:"name"`
-		Url       string `json:"url"` // nolint:golint
+		Url       string `json:"url"` //nolint:all
 		Active    bool   `json:"active"`
 		Backlog   bool   `json:"backlog"`
 		Rewriting bool   `json:"rewriting"`

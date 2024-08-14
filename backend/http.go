@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -46,11 +45,11 @@ type QueryResult struct {
 	Err    error
 }
 
-type HttpBackend struct { // nolint:golint
+type HttpBackend struct { //nolint:all
 	client     *http.Client
 	transport  *http.Transport
 	Name       string
-	Url        string // nolint:golint
+	Url        string //nolint:all
 	token      string
 	interval   int
 	running    atomic.Value
@@ -60,7 +59,7 @@ type HttpBackend struct { // nolint:golint
 	writeOnly  bool
 }
 
-func NewHttpBackend(cfg *BackendConfig, pxcfg *ProxyConfig) (hb *HttpBackend) { // nolint:golint
+func NewHttpBackend(cfg *BackendConfig, pxcfg *ProxyConfig) (hb *HttpBackend) { //nolint:all
 	hb = NewSimpleHttpBackend(cfg)
 	hb.client = NewClient(strings.HasPrefix(cfg.Url, "https"), pxcfg.WriteTimeout)
 	hb.interval = pxcfg.CheckInterval
@@ -68,7 +67,7 @@ func NewHttpBackend(cfg *BackendConfig, pxcfg *ProxyConfig) (hb *HttpBackend) { 
 	return
 }
 
-func NewSimpleHttpBackend(cfg *BackendConfig) (hb *HttpBackend) { // nolint:golint
+func NewSimpleHttpBackend(cfg *BackendConfig) (hb *HttpBackend) { //nolint:all
 	hb = &HttpBackend{
 		transport: NewTransport(strings.HasPrefix(cfg.Url, "https")),
 		Name:      cfg.Name,
@@ -104,7 +103,7 @@ func NewTransport(tlsSkip bool) *http.Transport {
 
 func CloneQueryRequest(r *http.Request) *http.Request {
 	cr := r.Clone(r.Context())
-	cr.Body = ioutil.NopCloser(&bytes.Buffer{})
+	cr.Body = io.NopCloser(&bytes.Buffer{})
 	return cr
 }
 
@@ -194,6 +193,10 @@ func (hb *HttpBackend) WriteStream(org, bucket string, stream io.Reader, compres
 	q.Set("org", org)
 	q.Set("bucket", bucket)
 	req, err := http.NewRequest("POST", hb.Url+"/api/v2/write?"+q.Encode(), stream)
+	if err != nil {
+		log.Print("new request error: ", err)
+		return nil
+	}
 	hb.SetAuthorization(req)
 	if compressed {
 		req.Header.Add("Content-Encoding", "gzip")
@@ -212,7 +215,7 @@ func (hb *HttpBackend) WriteStream(org, bucket string, stream io.Reader, compres
 	}
 	log.Printf("write status code: %d, from: %s", resp.StatusCode, hb.Url)
 
-	respbuf, err := ioutil.ReadAll(resp.Body)
+	respbuf, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Print("readall error: ", err)
 		return
@@ -264,7 +267,7 @@ func (hb *HttpBackend) QueryFlux(req *http.Request, w http.ResponseWriter) (err 
 
 	CopyHeader(w.Header(), resp.Header)
 
-	p, err := ioutil.ReadAll(resp.Body)
+	p, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("flux read body error: %s", err)
 		return
@@ -316,7 +319,7 @@ func (hb *HttpBackend) Query(req *http.Request, w http.ResponseWriter, decompres
 		respBody = b
 	}
 
-	qr.Body, qr.Err = ioutil.ReadAll(respBody)
+	qr.Body, qr.Err = io.ReadAll(respBody)
 	if qr.Err != nil {
 		log.Printf("read body error: %s, the query is %s", qr.Err, q)
 		return

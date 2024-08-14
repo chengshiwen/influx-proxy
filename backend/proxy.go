@@ -37,7 +37,7 @@ func NewProxy(cfg *ProxyConfig) (ip *Proxy) {
 	for key, value := range cfg.DBRP.Mapping {
 		ip.dbrps[key] = strings.Split(value, cfg.DBRP.Separator)
 	}
-	rand.Seed(time.Now().UnixNano())
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 	return
 }
 

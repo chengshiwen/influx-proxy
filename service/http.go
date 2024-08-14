@@ -9,7 +9,7 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"mime"
 	"net/http"
@@ -34,7 +34,7 @@ func (mux *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	mux.ServeMux.ServeHTTP(w, r)
 }
 
-type HttpService struct { // nolint:golint
+type HttpService struct { //nolint:all
 	ip           *backend.Proxy
 	token        string
 	writeTracing bool
@@ -42,7 +42,7 @@ type HttpService struct { // nolint:golint
 	pprofEnabled bool
 }
 
-func NewHttpService(cfg *backend.ProxyConfig) (hs *HttpService) { // nolint:golint
+func NewHttpService(cfg *backend.ProxyConfig) (hs *HttpService) { //nolint:all
 	ip := backend.NewProxy(cfg)
 	hs = &HttpService{
 		ip:           ip,
@@ -68,7 +68,7 @@ func (hs *HttpService) Register(mux *ServeMux) {
 	}
 }
 
-func (hs *HttpService) HandlerPing(w http.ResponseWriter, req *http.Request) {
+func (hs *HttpService) HandlerPing(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -112,7 +112,7 @@ func (hs *HttpService) HandlerQueryV2(w http.ResponseWriter, req *http.Request) 
 		hs.WriteError(w, req, http.StatusBadRequest, err.Error())
 		return
 	}
-	rbody, err := ioutil.ReadAll(req.Body)
+	rbody, err := io.ReadAll(req.Body)
 	if err != nil {
 		hs.WriteError(w, req, http.StatusBadRequest, err.Error())
 		return
@@ -139,7 +139,7 @@ func (hs *HttpService) HandlerQueryV2(w http.ResponseWriter, req *http.Request) 
 		return
 	}
 
-	req.Body = ioutil.NopCloser(bytes.NewBuffer(rbody))
+	req.Body = io.NopCloser(bytes.NewBuffer(rbody))
 	err = hs.ip.QueryFlux(w, req, org, qr)
 	if err != nil {
 		log.Printf("flux query error: %s, query: %s, spec: %s, org: %s, client: %s", err, qr.Query, qr.Spec, org, req.RemoteAddr)
@@ -227,7 +227,7 @@ func (hs *HttpService) handlerWrite(org, bucket, precision string, w http.Respon
 		defer b.Close()
 		body = b
 	}
-	p, err := ioutil.ReadAll(body)
+	p, err := io.ReadAll(body)
 	if err != nil {
 		hs.WriteError(w, req, http.StatusBadRequest, err.Error())
 		return

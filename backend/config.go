@@ -25,14 +25,14 @@ var (
 	ErrEmptyBackends         = errors.New("backends cannot be empty")
 	ErrEmptyBackendName      = errors.New("backend name cannot be empty")
 	ErrDuplicatedBackendName = errors.New("backend name duplicated")
-	ErrEmptyBackendUrl       = errors.New("backend url cannot be empty") // nolint:golint
+	ErrEmptyBackendUrl       = errors.New("backend url cannot be empty") //nolint:all
 	ErrEmptyBackendToken     = errors.New("backend token cannot be empty")
 	ErrInvalidDBRPMapping    = errors.New("invalid dbrp mapping")
 )
 
-type BackendConfig struct { // nolint:golint
+type BackendConfig struct { //nolint:all
 	Name      string `mapstructure:"name"`
-	Url       string `mapstructure:"url"` // nolint:golint
+	Url       string `mapstructure:"url"` //nolint:all
 	Token     string `mapstructure:"token"`
 	WriteOnly bool   `mapstructure:"write_only"`
 }

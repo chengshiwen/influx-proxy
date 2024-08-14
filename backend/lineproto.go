@@ -62,14 +62,12 @@ func AppendNano(line []byte, precision string) []byte {
 			return append(line, '0', '0', '0', '0', '0', '0')
 		} else if precision == "s" {
 			return append(line, '0', '0', '0', '0', '0', '0', '0', '0', '0')
-		} else {
-			mul := models.GetPrecisionMultiplier(precision)
-			nano := BytesToInt64(line[pos+1:]) * mul
-			return append(line[:pos+1], Int64ToBytes(nano)...)
 		}
-	} else {
-		return append(line, []byte(" "+strconv.FormatInt(time.Now().UnixNano(), 10))...)
+		mul := models.GetPrecisionMultiplier(precision)
+		nano := BytesToInt64(line[pos+1:]) * mul
+		return append(line[:pos+1], Int64ToBytes(nano)...)
 	}
+	return append(line, []byte(" "+strconv.FormatInt(time.Now().UnixNano(), 10))...)
 }
 
 func Int64ToBytes(n int64) []byte {
@@ -77,7 +75,7 @@ func Int64ToBytes(n int64) []byte {
 }
 
 func BytesToInt64(buf []byte) int64 {
-	var res int64 = 0
+	var res int64
 	var length = len(buf)
 	for i := 0; i < length; i++ {
 		res = res*10 + int64(buf[i]-'0')
