@@ -73,6 +73,8 @@ curl -G 'http://127.0.0.1:7076/query' --data-urlencode 'q=show field KEYS on myd
 curl -G 'http://127.0.0.1:7076/query' --data-urlencode 'q=show field KEYS from mydb.myrp.cpu8'
 
 curl -G 'http://127.0.0.1:7076/query?db=mydb&rp=myrp' --data-urlencode 'q=show MEASUREMENTS'
+curl -G 'http://127.0.0.1:7076/query?db=mydb&rp=myrp' --data-urlencode 'q=show series'
+curl -G 'http://127.0.0.1:7076/query?db=mydb&rp=myrp' --data-urlencode 'q=show series from cpu6'
 curl -G 'http://127.0.0.1:7076/query?db=mydb&rp=myrp' --data-urlencode 'q=show field KEYS'
 curl -G 'http://127.0.0.1:7076/query?db=mydb&rp=myrp' --data-urlencode 'q=show field KEYS from cpu5'
 curl -G 'http://127.0.0.1:7076/query?db=mydb&rp=myrp' --data-urlencode 'q=show TAG keys'
@@ -81,6 +83,8 @@ curl -G 'http://127.0.0.1:7076/query?db=mydb&rp=myrp' --data-urlencode 'q=show t
 curl -G 'http://127.0.0.1:7076/query?db=mydb&rp=myrp' --data-urlencode 'q=show tag VALUES from cpu6 WITH key = "region"'
 
 curl -G 'http://127.0.0.1:7076/query' --data-urlencode 'q=show MEASUREMENTS on mydb'
+curl -G 'http://127.0.0.1:7076/query' --data-urlencode 'q=show SERIES on mydb'
+curl -G 'http://127.0.0.1:7076/query' --data-urlencode 'q=show SERIES on mydb from myrp.cpu6'
 curl -G 'http://127.0.0.1:7076/query' --data-urlencode 'q=show field KEYS on mydb'
 curl -G 'http://127.0.0.1:7076/query' --data-urlencode 'q=show field KEYS on mydb from myrp.cpu8'
 curl -G 'http://127.0.0.1:7076/query' --data-urlencode 'q=show TAG keys on mydb'

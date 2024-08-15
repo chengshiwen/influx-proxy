@@ -216,6 +216,7 @@ Only support match the following commands, more details please see [InfluxQL sup
 
 * `select from` (read-only)
 * `show databases`
+* `show series`
 * `show measurements`
 * `show tag keys`
 * `show tag values`

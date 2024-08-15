@@ -17,6 +17,7 @@ import (
 
 var SupportCmds = util.NewSet(
 	"show measurements",
+	"show series",
 	"show field keys",
 	"show tag keys",
 	"show tag values",
@@ -412,8 +413,8 @@ func CheckDeleteOrDropMeasurementFromTokens(tokens []string) (check bool) {
 }
 
 func CheckLimitOrOffsetClause(tokens []string) (check bool) {
-	for _, element := range tokens {
-		stmt := strings.ToLower(element)
+	for _, token := range tokens {
+		stmt := strings.ToLower(token)
 		if stmt == "limit" || stmt == "offset" {
 			return true
 		}
