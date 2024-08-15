@@ -16,28 +16,28 @@ services:
       - influx_net
 
   influxdb-1:
-    image: influxdb:2.4
+    image: influxdb:2.7
     container_name: influxdb-1
     restart: unless-stopped
     networks:
       - influx_net
 
   influxdb-2:
-    image: influxdb:2.4
+    image: influxdb:2.7
     container_name: influxdb-2
     restart: unless-stopped
     networks:
       - influx_net
 
   influxdb-3:
-    image: influxdb:2.4
+    image: influxdb:2.7
     container_name: influxdb-3
     restart: unless-stopped
     networks:
       - influx_net
 
   influxdb-4:
-    image: influxdb:2.4
+    image: influxdb:2.7
     container_name: influxdb-4
     restart: unless-stopped
     networks:

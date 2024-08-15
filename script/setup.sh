@@ -12,10 +12,10 @@ else
     echo "Mode: default"
 fi
 
-docker run -d --name influxdb-1 -p 8086:8086 ${OPTIONS} influxdb:2.4
-docker run -d --name influxdb-2 -p 8087:8086 ${OPTIONS} influxdb:2.4
-docker run -d --name influxdb-3 -p 8088:8086 ${OPTIONS} influxdb:2.4
-docker run -d --name influxdb-4 -p 8089:8086 ${OPTIONS} influxdb:2.4
+docker run -d --name influxdb-1 -p 8086:8086 ${OPTIONS} influxdb:2.7
+docker run -d --name influxdb-2 -p 8087:8086 ${OPTIONS} influxdb:2.7
+docker run -d --name influxdb-3 -p 8088:8086 ${OPTIONS} influxdb:2.7
+docker run -d --name influxdb-4 -p 8089:8086 ${OPTIONS} influxdb:2.7
 
 
 BASEDIR=$(cd $(dirname $0)/..; pwd)

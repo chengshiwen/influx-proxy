@@ -18,7 +18,7 @@ Forked from the above InfluxDB Proxy, after many improvements and optimizations,
 
 Since the InfluxDB Proxy v1 is limited by the only `ONE` database and the `KEYMAPS` configuration, we refactored [InfluxDB Proxy v2](https://github.com/chengshiwen/influx-proxy) with high availability and consistent hash, which supports multiple databases and tools to rebalance, recovery, resync and cleanup.
 
-[InfluxDB Proxy v3](https://github.com/chengshiwen/influx-proxy/tree/influxdb-v2) is aimed at [InfluxDB v2](https://docs.influxdata.com/influxdb/v2.4/).
+[InfluxDB Proxy v3](https://github.com/chengshiwen/influx-proxy/tree/influxdb-v2) is aimed at [InfluxDB v2](https://docs.influxdata.com/influxdb/v2/).
 
 ## Features
 
@@ -177,13 +177,13 @@ The configuration settings are as follows:
 
 ## Write
 
-* [/api/v2/write](https://docs.influxdata.com/influxdb/v2.4/api/#operation/PostWrite) v2 supported
-* [/write](https://docs.influxdata.com/influxdb/v2.4/api/v1-compatibility/#operation/PostWriteV1) v1 compatibility supported
+* [/api/v2/write](https://docs.influxdata.com/influxdb/v2/api/#operation/PostWrite) v2 supported
+* [/write](https://docs.influxdata.com/influxdb/v2/api/v1-compatibility/#operation/PostWriteV1) v1 compatibility supported
 
 ## Query
 
-* [/api/v2/query](https://docs.influxdata.com/influxdb/v2.4/api/#operation/PostQuery) v2 supported
-* [/query](https://docs.influxdata.com/influxdb/v2.4/api/v1-compatibility/#operation/PostQueryV1) v1 compatibility supported
+* [/api/v2/query](https://docs.influxdata.com/influxdb/v2/api/#operation/PostQuery) v2 supported
+* [/query](https://docs.influxdata.com/influxdb/v2/api/v1-compatibility/#operation/PostQueryV1) v1 compatibility supported
 
 ### /api/v2/query
 
@@ -209,7 +209,7 @@ Note: `dbrp mapping` must be specified like
 }
 ```
 
-Only support match the following commands, more details please see [InfluxQL support](https://docs.influxdata.com/influxdb/v2.4/query-data/influxql/#influxql-support).
+Only support match the following commands, more details please see [InfluxQL support](https://docs.influxdata.com/influxdb/v2/query-data/influxql/#influxql-support).
 
 * `select from` (read-only)
 * `show databases`
