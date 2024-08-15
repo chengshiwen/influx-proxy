@@ -119,9 +119,9 @@ func (ip *Proxy) Query(w http.ResponseWriter, req *http.Request) (body []byte, e
 		return nil, ErrIllegalQL
 	}
 
-	db := req.FormValue("db")
+	db, _ := GetDatabaseFromTokens(tokens)
 	if db == "" {
-		db, _ = GetDatabaseFromTokens(tokens)
+		db = req.FormValue("db")
 	}
 	if !CheckShowDatabasesFromTokens(tokens) {
 		if db == "" {
