@@ -265,9 +265,12 @@ func (hs *HttpService) HandlerReplica(w http.ResponseWriter, req *http.Request) 
 
 	org := req.URL.Query().Get("org")
 	bucket := req.URL.Query().Get("bucket")
-	meas := req.URL.Query().Get("meas")
-	if org != "" && bucket != "" && meas != "" {
-		key := backend.GetKey(org, bucket, meas)
+	measurement := req.URL.Query().Get("measurement")
+	if measurement == "" {
+		measurement = req.URL.Query().Get("meas")
+	}
+	if org != "" && bucket != "" && measurement != "" {
+		key := backend.GetKey(org, bucket, measurement)
 		backends := hs.ip.GetBackends(key)
 		data := make([]map[string]interface{}, len(backends))
 		for i, b := range backends {
@@ -279,7 +282,7 @@ func (hs *HttpService) HandlerReplica(w http.ResponseWriter, req *http.Request) 
 		}
 		hs.Write(w, req, http.StatusOK, data)
 	} else {
-		hs.WriteError(w, req, http.StatusBadRequest, "invalid org, bucket or meas")
+		hs.WriteError(w, req, http.StatusBadRequest, "invalid org, bucket or measurement")
 	}
 }
 

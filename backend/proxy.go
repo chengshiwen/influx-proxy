@@ -88,11 +88,11 @@ func (ip *Proxy) GetHealth() []interface{} {
 }
 
 func (ip *Proxy) QueryFlux(w http.ResponseWriter, req *http.Request, org string, qr *QueryRequest) (err error) {
-	var bucket, meas string
+	var bucket, measurement string
 	if qr.Query != "" {
-		bucket, meas, err = ScanQuery(qr.Query)
+		bucket, measurement, err = ScanQuery(qr.Query)
 	} else if qr.Spec != nil {
-		bucket, meas, err = ScanSpec(qr.Spec)
+		bucket, measurement, err = ScanSpec(qr.Spec)
 	}
 	if err != nil {
 		return
@@ -100,10 +100,10 @@ func (ip *Proxy) QueryFlux(w http.ResponseWriter, req *http.Request, org string,
 	if bucket == "" {
 		return ErrGetBucket
 	}
-	if meas == "" {
+	if measurement == "" {
 		return ErrGetMeasurement
 	}
-	return QueryFlux(w, req, ip, org, bucket, meas)
+	return QueryFlux(w, req, ip, org, bucket, measurement)
 }
 
 func (ip *Proxy) Query(w http.ResponseWriter, req *http.Request) (body []byte, err error) {
@@ -171,20 +171,20 @@ func (ip *Proxy) Write(p []byte, org, bucket, precision string) (err error) {
 
 func (ip *Proxy) WriteRow(line []byte, org, bucket, precision string) {
 	nanoLine := AppendNano(line, precision)
-	meas, err := ScanKey(nanoLine)
+	measurement, err := ScanKey(nanoLine)
 	if err != nil {
 		log.Printf("scan key error: %s", err)
 		return
 	}
-	if !RapidCheck(nanoLine[len(meas):]) {
+	if !RapidCheck(nanoLine[len(measurement):]) {
 		log.Printf("invalid format, org: %s, bucket: %s, precision: %s, line: %s", org, bucket, precision, string(line))
 		return
 	}
 
-	key := GetKey(org, bucket, meas)
+	key := GetKey(org, bucket, measurement)
 	backends := ip.GetBackends(key)
 	if len(backends) == 0 {
-		log.Printf("write data error: can't get backends, org: %s, bucket: %s, meas: %s", org, bucket, meas)
+		log.Printf("write data error: can't get backends, org: %s, bucket: %s, measurement: %s", org, bucket, measurement)
 		return
 	}
 

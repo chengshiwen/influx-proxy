@@ -56,9 +56,9 @@ func query(w http.ResponseWriter, req *http.Request, ip *Proxy, key string, fn f
 	return nil, ErrBackendsUnavailable
 }
 
-func QueryFlux(w http.ResponseWriter, req *http.Request, ip *Proxy, org, bucket, meas string) (err error) {
-	// all circles -> backend by key(org,bucket,meas) -> query flux
-	key := GetKey(org, bucket, meas)
+func QueryFlux(w http.ResponseWriter, req *http.Request, ip *Proxy, org, bucket, measurement string) (err error) {
+	// all circles -> backend by key(org,bucket,measurement) -> query flux
+	key := GetKey(org, bucket, measurement)
 	fn := func(be *Backend, req *http.Request, w http.ResponseWriter) ([]byte, error) {
 		err = be.QueryFlux(req, w)
 		return nil, err
@@ -68,8 +68,8 @@ func QueryFlux(w http.ResponseWriter, req *http.Request, ip *Proxy, org, bucket,
 }
 
 func QueryFromQL(w http.ResponseWriter, req *http.Request, ip *Proxy, tokens []string, db, rp string) (body []byte, err error) {
-	// all circles -> backend by key(org,bucket,meas) -> select or show
-	meas, err := GetMeasurementFromTokens(tokens)
+	// all circles -> backend by key(org,bucket,measurement) -> select or show
+	measurement, err := GetMeasurementFromTokens(tokens)
 	if err != nil {
 		return nil, ErrGetMeasurement
 	}
@@ -77,7 +77,7 @@ func QueryFromQL(w http.ResponseWriter, req *http.Request, ip *Proxy, tokens []s
 	if err != nil {
 		return nil, ErrDBRPNotMapping
 	}
-	key := GetKey(org, bucket, meas)
+	key := GetKey(org, bucket, measurement)
 	fn := func(be *Backend, req *http.Request, w http.ResponseWriter) ([]byte, error) {
 		qr := be.Query(req, w, false)
 		return qr.Body, qr.Err
@@ -131,8 +131,8 @@ func QueryShowQL(w http.ResponseWriter, req *http.Request, ip *Proxy, tokens []s
 }
 
 func QueryDeleteOrDropQL(w http.ResponseWriter, req *http.Request, ip *Proxy, tokens []string, db, rp string) (body []byte, err error) {
-	// all circles -> backend by key(org,bucket,meas) -> delete or drop measurement
-	meas, err := GetMeasurementFromTokens(tokens)
+	// all circles -> backend by key(org,bucket,measurement) -> delete or drop measurement
+	measurement, err := GetMeasurementFromTokens(tokens)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func QueryDeleteOrDropQL(w http.ResponseWriter, req *http.Request, ip *Proxy, to
 	if err != nil {
 		return nil, ErrDBRPNotMapping
 	}
-	key := GetKey(org, bucket, meas)
+	key := GetKey(org, bucket, measurement)
 	backends := ip.GetBackends(key)
 	if len(backends) == 0 {
 		return nil, ErrGetBackends
