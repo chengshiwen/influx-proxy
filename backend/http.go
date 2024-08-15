@@ -229,7 +229,7 @@ func (hb *HttpBackend) WriteStream(db, rp string, stream io.Reader, compressed b
 	req, err := http.NewRequest("POST", hb.Url+"/write?"+q.Encode(), stream)
 	if err != nil {
 		log.Print("new request error: ", err)
-		return nil
+		return
 	}
 	if hb.username != "" || hb.password != "" {
 		hb.SetBasicAuth(req)
