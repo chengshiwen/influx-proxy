@@ -32,6 +32,7 @@ Since the InfluxDB Proxy v1 is limited by the only `ONE` database and the `KEYMA
 * Support data sharding with consistent hash.
 * Load config file and no longer depend on python and redis.
 * Support influxdb-java, and influxdb shell.
+* Support prometheus monitor with /metrics.
 * Support authentication and https.
 * Support health status check.
 * Support version display.
@@ -165,7 +166,7 @@ The configuration settings are as follows:
 * `write_timeout`: default is `10`, write timeout until 10 seconds
 * `idle_timeout`: default is `10`, keep-alives wait time until 10 seconds
 * `token`: proxy token, default is `empty` which means no auth
-* `ping_auth_enabled`: enable authentication on the `/ping`, default is `false`
+* `ping_auth_enabled`: enable authentication on `/ping` and `/metrics`, default is `false`
 * `write_tracing`: enable logging for the write, default is `false`
 * `query_tracing`: enable logging for the query, default is `false`
 * `pprof_enabled`: enable `/debug/pprof` HTTP endpoint, default is `false`

@@ -18,6 +18,7 @@ import (
 
 	"github.com/chengshiwen/influx-proxy/backend"
 	"github.com/chengshiwen/influx-proxy/util"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type ServeMux struct {
@@ -64,6 +65,7 @@ func (hs *HttpService) Register(mux *ServeMux) {
 	mux.HandleFunc("/api/v2/write", hs.HandlerWriteV2)
 	mux.HandleFunc("/health", hs.HandlerHealth)
 	mux.HandleFunc("/replica", hs.HandlerReplica)
+	mux.HandleFunc("/metrics", hs.HandlerMetrics)
 	if hs.pprofEnabled {
 		mux.HandleFunc("/debug/pprof/", pprof.Index)
 		mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
@@ -289,6 +291,13 @@ func (hs *HttpService) HandlerReplica(w http.ResponseWriter, req *http.Request) 
 	} else {
 		hs.WriteError(w, req, http.StatusBadRequest, "invalid org, bucket or measurement")
 	}
+}
+
+func (hs *HttpService) HandlerMetrics(w http.ResponseWriter, req *http.Request) {
+	if hs.isAuthEnabled() && hs.pingAuthEnabled && !hs.checkAuth(w, req) {
+		return
+	}
+	promhttp.Handler().ServeHTTP(w, req)
 }
 
 func (hs *HttpService) Write(w http.ResponseWriter, req *http.Request, status int, data interface{}) {
