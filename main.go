@@ -58,7 +58,7 @@ func main() {
 	server := &http.Server{
 		Addr:        cfg.ListenAddr,
 		Handler:     mux,
-		IdleTimeout: 10 * time.Second,
+		IdleTimeout: time.Duration(cfg.IdleTimeout) * time.Second,
 	}
 	if cfg.HTTPSEnabled {
 		if cfg.TLS != nil {

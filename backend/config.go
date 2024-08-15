@@ -60,9 +60,10 @@ type ProxyConfig struct {
 	RewriteThreads  int             `mapstructure:"rewrite_threads"`
 	ConnPoolSize    int             `mapstructure:"conn_pool_size"`
 	WriteTimeout    int             `mapstructure:"write_timeout"`
+	IdleTimeout     int             `mapstructure:"idle_timeout"`
+	Token           string          `mapstructure:"token"`
 	WriteTracing    bool            `mapstructure:"write_tracing"`
 	QueryTracing    bool            `mapstructure:"query_tracing"`
-	Token           string          `mapstructure:"token"`
 	PprofEnabled    bool            `mapstructure:"pprof_enabled"`
 	HTTPSEnabled    bool            `mapstructure:"https_enabled"`
 	HTTPSCert       string          `mapstructure:"https_cert"`
@@ -119,6 +120,9 @@ func (cfg *ProxyConfig) setDefault() {
 	}
 	if cfg.WriteTimeout <= 0 {
 		cfg.WriteTimeout = 10
+	}
+	if cfg.IdleTimeout <= 0 {
+		cfg.IdleTimeout = 10
 	}
 }
 
