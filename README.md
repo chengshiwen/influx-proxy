@@ -1,5 +1,13 @@
 # InfluxDB Proxy
 
+[![CN doc](https://img.shields.io/badge/文档-中文版-blue.svg)](https://github.com/chengshiwen/influx-proxy/wiki)
+[![EN doc](https://img.shields.io/badge/document-English-blue.svg)](https://github.com/chengshiwen/influx-proxy/blob/master/README.md)
+[![Go Report Card](https://goreportcard.com/badge/chengshiwen/influx-proxy)](https://goreportcard.com/report/chengshiwen/influx-proxy)
+[![LICENSE](https://img.shields.io/github/license/chengshiwen/influx-proxy.svg)](https://github.com/chengshiwen/influx-proxy/blob/master/LICENSE)
+[![Releases](https://img.shields.io/github/v/release/chengshiwen/influx-proxy.svg)](https://github.com/chengshiwen/influx-proxy/releases)
+![GitHub stars](https://img.shields.io/github/stars/chengshiwen/influx-proxy.svg?label=github%20stars&logo=github)
+[![Docker pulls](https://img.shields.io/docker/pulls/chengshiwen/influx-proxy.svg)](https://hub.docker.com/r/chengshiwen/influx-proxy)
+
 This project adds a basic high availability and consistent hash layer to InfluxDB v2.
 
 NOTE: influx-proxy must be built with Go 1.21+ with Go module support, don't implement udp.
@@ -30,6 +38,7 @@ Since the InfluxDB Proxy v1 is limited by the only `ONE` database and the `KEYMA
 * Transparent for client, like cluster for client.
 * Cache data to file when write failed, then rewrite.
 * Support data sharding with consistent hash.
+* Support custom hash key and shard key of database sharding.
 * Load config file and no longer depend on python and redis.
 * Support influxdb-java, and influxdb shell.
 * Support prometheus monitor with /metrics.
@@ -157,6 +166,8 @@ The configuration settings are as follows:
   * `mapping`: the key-value pair mapping from `db/rp` to `org/bucket`, for 1.x compatibility, default is `nil`
 * `listen_addr`: proxy listen addr, default is `:7076`
 * `data_dir`: data dir to save .dat .rec, default is `data`
+* `hash_key`: backend key template for consistent hash, which containing `%idx`, like `backend-%idx`, default is `%idx`, once changed rebalance operation is necessary
+* `shard_key`: data shard key template for hash, which containing `%org`, `%bk` or `%mm`, like `shard-%org-%bk-%mm`, default is `%org,%bk,%mm` which means `org,bucket,measurement`, once changed rebalance operation is necessary
 * `flush_size`: default is `10000`, wait 10000 points write
 * `flush_time`: default is `1`, wait 1 second write whether point count has bigger than flush_size config
 * `check_interval`: default is `1`, check backend active every 1 second
@@ -177,6 +188,31 @@ The configuration settings are as follows:
   * `ciphers`: set of cipher suite IDs to negotiate when https is enabled, referring to [ciphersMap](./backend/tls/tls_config.go#L67), default is `[]`
   * `min_version`: minimum version of the tls protocol when https is enabled, including `tls1.0`, `tls1.1`, `tls1.2` and `tls1.3`, default is `empty`
   * `max_version`: maximum version of the tls protocol when https is enabled, including `tls1.0`, `tls1.1`, `tls1.2` and `tls1.3`, default is `empty`
+
+## Hash and Shard Key
+
+`hash_key` and `shard_key` together control which influxdb instance the data should be written to.
+`hash_key` is backend key template for consistent hash, which containing `%idx` (`%idx` is the index of the influxdb backend in the circle), like `backend-%idx`.
+`shard_key` is data shard key template for hash, which containing `%org`, `%bk` or `%mm` (`%org`, `%bk` and `%mm` are the org, bucket and measurement in the data respectively), like `shard-%org-%bk-%mm`.
+
+To avoid data skew (i.e. uneven data distribution), both `hash_key` and `shard_key` need to be set appropriately. Before setting, [`influx-tool hashdist`](https://github.com/chengshiwen/influx-tool#hashdist) can help simulate and test the hash distribution. For example, execute
+
+```sh
+$ head -n 3 table.csv
+org1,bucket1,cpu1
+org1,bucket2,cpu2
+org2,bucket3,cpu3
+$ influx-tool hashdist -v v2 -n 6 -k backend-%idx -K shard-%org-%bk-%mm -f table.csv -D -
+node total: 6, hash key: backend-%idx, shard key: shard-%org-%bk-%mm, total hits: 40
+node index: 0, hits: 5, percent: 12.5%, expect: 16.7%
+node index: 1, hits: 5, percent: 12.5%, expect: 16.7%
+node index: 2, hits: 9, percent: 22.5%, expect: 16.7%
+node index: 3, hits: 7, percent: 17.5%, expect: 16.7%
+node index: 4, hits: 7, percent: 17.5%, expect: 16.7%
+node index: 5, hits: 7, percent: 17.5%, expect: 16.7%
+```
+
+NOTE: Once one of `hash_key` and `shard_key` is changed, rebalance operation is necessary.
 
 ## Write
 
@@ -228,7 +264,7 @@ Only support match the following commands, more details please see [InfluxQL sup
 
 ## HTTP Endpoints
 
-[HTTP Endpoints](https://github.com/chengshiwen/influx-proxy/wiki/HTTP-Endpoints)
+[HTTP Endpoints](https://github.com/chengshiwen/influx-proxy/wiki/HTTP-Endpoints-v3)
 
 ## Benchmark
 
