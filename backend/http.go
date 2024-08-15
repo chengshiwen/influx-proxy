@@ -195,7 +195,7 @@ func (hb *HttpBackend) WriteStream(org, bucket string, stream io.Reader, compres
 	req, err := http.NewRequest("POST", hb.Url+"/api/v2/write?"+q.Encode(), stream)
 	if err != nil {
 		log.Print("new request error: ", err)
-		return nil
+		return err
 	}
 	hb.SetAuthorization(req)
 	if compressed {
@@ -307,7 +307,7 @@ func (hb *HttpBackend) Query(req *http.Request, w http.ResponseWriter, decompres
 		CopyHeader(w.Header(), resp.Header)
 	}
 
-	respBody := resp.Body
+	body := resp.Body
 	if decompress && resp.Header.Get("Content-Encoding") == "gzip" {
 		b, err := gzip.NewReader(resp.Body)
 		if err != nil {
@@ -316,10 +316,10 @@ func (hb *HttpBackend) Query(req *http.Request, w http.ResponseWriter, decompres
 			return
 		}
 		defer b.Close()
-		respBody = b
+		body = b
 	}
 
-	qr.Body, qr.Err = io.ReadAll(respBody)
+	qr.Body, qr.Err = io.ReadAll(body)
 	if qr.Err != nil {
 		log.Printf("read body error: %s, the query is %s", qr.Err, q)
 		return
