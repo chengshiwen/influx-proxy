@@ -22,6 +22,14 @@ var (
 )
 
 var (
+	HashKeyVarIdx   = "%idx"
+	ShardKeyVarOrg  = "%org"
+	ShardKeyVarBk   = "%bk"
+	ShardKeyVarMm   = "%mm"
+	ShardKeyOrgBkMm = "%org,%bk,%mm"
+)
+
+var (
 	ErrEmptyCircles          = errors.New("circles cannot be empty")
 	ErrEmptyBackends         = errors.New("backends cannot be empty")
 	ErrEmptyBackendName      = errors.New("backend name cannot be empty")
@@ -29,6 +37,8 @@ var (
 	ErrEmptyBackendUrl       = errors.New("backend url cannot be empty") //nolint:all
 	ErrEmptyBackendToken     = errors.New("backend token cannot be empty")
 	ErrInvalidDBRPMapping    = errors.New("invalid dbrp mapping")
+	ErrInvalidHashKey        = errors.New("invalid hash_key, require template containing %idx")
+	ErrInvalidShardKey       = errors.New("invalid shard_key, require template containing %org, %bk or %mm")
 )
 
 type BackendConfig struct { //nolint:all
@@ -53,6 +63,8 @@ type ProxyConfig struct {
 	DBRP            *DBRPConfig     `mapstructure:"dbrp"`
 	ListenAddr      string          `mapstructure:"listen_addr"`
 	DataDir         string          `mapstructure:"data_dir"`
+	HashKey         string          `mapstructure:"hash_key"`
+	ShardKey        string          `mapstructure:"shard_key"`
 	FlushSize       int             `mapstructure:"flush_size"`
 	FlushTime       int             `mapstructure:"flush_time"`
 	CheckInterval   int             `mapstructure:"check_interval"`
@@ -100,6 +112,12 @@ func (cfg *ProxyConfig) setDefault() {
 	}
 	if cfg.DataDir == "" {
 		cfg.DataDir = "data"
+	}
+	if cfg.HashKey == "" {
+		cfg.HashKey = HashKeyVarIdx
+	}
+	if cfg.ShardKey == "" {
+		cfg.ShardKey = ShardKeyOrgBkMm
 	}
 	if cfg.FlushSize <= 0 {
 		cfg.FlushSize = 10000
@@ -157,6 +175,12 @@ func (cfg *ProxyConfig) checkConfig() (err error) {
 			return ErrInvalidDBRPMapping
 		}
 	}
+	if !strings.Contains(cfg.HashKey, HashKeyVarIdx) {
+		return ErrInvalidHashKey
+	}
+	if !strings.Contains(cfg.ShardKey, ShardKeyVarOrg) && !strings.Contains(cfg.ShardKey, ShardKeyVarBk) && !strings.Contains(cfg.ShardKey, ShardKeyVarMm) {
+		return ErrInvalidShardKey
+	}
 	if cfg.TLS != nil {
 		if err := cfg.TLS.Validate(); err != nil {
 			return err
@@ -170,6 +194,8 @@ func (cfg *ProxyConfig) PrintSummary() {
 	for id, circle := range cfg.Circles {
 		log.Printf("circle %d: %d backends loaded", id, len(circle.Backends))
 	}
+	log.Printf("hash key: %s", cfg.HashKey)
+	log.Printf("shard key: %s", cfg.ShardKey)
 	log.Printf("auth: %t", cfg.Token != "")
 }
 

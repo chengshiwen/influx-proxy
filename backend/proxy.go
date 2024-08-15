@@ -19,6 +19,7 @@ import (
 type Proxy struct {
 	Circles []*Circle
 	dbrps   map[string][]string
+	sTpl    *shardTpl
 }
 
 func NewProxy(cfg *ProxyConfig) (ip *Proxy) {
@@ -30,6 +31,7 @@ func NewProxy(cfg *ProxyConfig) (ip *Proxy) {
 	ip = &Proxy{
 		Circles: make([]*Circle, len(cfg.Circles)),
 		dbrps:   make(map[string][]string),
+		sTpl:    newShardTpl(cfg.ShardKey),
 	}
 	for idx, circfg := range cfg.Circles {
 		ip.Circles[idx] = NewCircle(circfg, cfg, idx)
@@ -41,8 +43,8 @@ func NewProxy(cfg *ProxyConfig) (ip *Proxy) {
 	return
 }
 
-func GetKey(elems ...string) string {
-	return strings.Join(elems, ",")
+func (ip *Proxy) GetKey(org, bk, mm string) string {
+	return ip.sTpl.GetKey(org, bk, mm)
 }
 
 func (ip *Proxy) DBRP2OrgBucket(db, rp string) (string, string, error) {
@@ -181,7 +183,7 @@ func (ip *Proxy) WriteRow(line []byte, org, bucket, precision string) {
 		return
 	}
 
-	key := GetKey(org, bucket, measurement)
+	key := ip.GetKey(org, bucket, measurement)
 	backends := ip.GetBackends(key)
 	if len(backends) == 0 {
 		log.Printf("write data error: can't get backends, org: %s, bucket: %s, measurement: %s", org, bucket, measurement)

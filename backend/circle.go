@@ -6,6 +6,7 @@ package backend
 
 import (
 	"strconv"
+	"strings"
 	"sync"
 
 	"stathat.com/c/consistent"
@@ -31,15 +32,16 @@ func NewCircle(cfg *CircleConfig, pxcfg *ProxyConfig, circleId int) (ic *Circle)
 	ic.router.NumberOfReplicas = 256
 	for idx, bkcfg := range cfg.Backends {
 		ic.Backends[idx] = NewBackend(bkcfg, pxcfg)
-		ic.addRouter(ic.Backends[idx], idx)
+		ic.addRouter(ic.Backends[idx], idx, pxcfg.HashKey)
 	}
 	return
 }
 
-func (ic *Circle) addRouter(be *Backend, idx int) {
-	str := "|" + strconv.Itoa(idx)
-	ic.router.Add(str)
-	ic.mapToBackend[str] = be
+func (ic *Circle) addRouter(be *Backend, idx int, hashKey string) {
+	// %idx: custom template like "backend-%idx"
+	key := strings.ReplaceAll(hashKey, HashKeyVarIdx, strconv.Itoa(idx))
+	ic.router.Add(key)
+	ic.mapToBackend[key] = be
 }
 
 func (ic *Circle) GetBackend(key string) *Backend {

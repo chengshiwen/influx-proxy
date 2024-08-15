@@ -58,7 +58,7 @@ func query(w http.ResponseWriter, req *http.Request, ip *Proxy, key string, fn f
 
 func QueryFlux(w http.ResponseWriter, req *http.Request, ip *Proxy, org, bucket, measurement string) (err error) {
 	// all circles -> backend by key(org,bucket,measurement) -> query flux
-	key := GetKey(org, bucket, measurement)
+	key := ip.GetKey(org, bucket, measurement)
 	fn := func(be *Backend, req *http.Request, w http.ResponseWriter) ([]byte, error) {
 		err = be.QueryFlux(req, w)
 		return nil, err
@@ -77,7 +77,7 @@ func QueryFromQL(w http.ResponseWriter, req *http.Request, ip *Proxy, tokens []s
 	if err != nil {
 		return nil, ErrDBRPNotMapping
 	}
-	key := GetKey(org, bucket, measurement)
+	key := ip.GetKey(org, bucket, measurement)
 	fn := func(be *Backend, req *http.Request, w http.ResponseWriter) ([]byte, error) {
 		qr := be.Query(req, w, false)
 		return qr.Body, qr.Err
@@ -140,7 +140,7 @@ func QueryDeleteOrDropQL(w http.ResponseWriter, req *http.Request, ip *Proxy, to
 	if err != nil {
 		return nil, ErrDBRPNotMapping
 	}
-	key := GetKey(org, bucket, measurement)
+	key := ip.GetKey(org, bucket, measurement)
 	backends := ip.GetBackends(key)
 	if len(backends) == 0 {
 		return nil, ErrGetBackends
