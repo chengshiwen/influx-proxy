@@ -62,6 +62,7 @@ type ProxyConfig struct {
 	WriteTimeout    int             `mapstructure:"write_timeout"`
 	IdleTimeout     int             `mapstructure:"idle_timeout"`
 	Token           string          `mapstructure:"token"`
+	PingAuthEnabled bool            `mapstructure:"ping_auth_enabled"`
 	WriteTracing    bool            `mapstructure:"write_tracing"`
 	QueryTracing    bool            `mapstructure:"query_tracing"`
 	PprofEnabled    bool            `mapstructure:"pprof_enabled"`

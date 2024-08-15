@@ -163,9 +163,11 @@ The configuration settings are as follows:
 * `rewrite_threads`: default is `5`, rewrite under 5 threads
 * `conn_pool_size`: default is `20`, create a connection pool which size is 20
 * `write_timeout`: default is `10`, write timeout until 10 seconds
+* `idle_timeout`: default is `10`, keep-alives wait time until 10 seconds
+* `token`: proxy token, default is `empty` which means no auth
+* `ping_auth_enabled`: enable authentication on the `/ping`, default is `false`
 * `write_tracing`: enable logging for the write, default is `false`
 * `query_tracing`: enable logging for the query, default is `false`
-* `token`: proxy token, default is `empty` which means no auth
 * `pprof_enabled`: enable `/debug/pprof` HTTP endpoint, default is `false`
 * `https_enabled`: enable https, default is `false`
 * `https_cert`: the ssl certificate to use when https is enabled, default is `empty`

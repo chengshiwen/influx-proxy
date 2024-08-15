@@ -30,6 +30,7 @@ conn_pool_size: 20
 write_timeout: 10
 idle_timeout: 10
 token: ""
+ping_auth_enabled: false
 write_tracing: false
 query_tracing: false
 pprof_enabled: false

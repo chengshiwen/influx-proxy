@@ -35,21 +35,23 @@ func (mux *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type HttpService struct { //nolint:all
-	ip           *backend.Proxy
-	token        string
-	writeTracing bool
-	queryTracing bool
-	pprofEnabled bool
+	ip              *backend.Proxy
+	token           string
+	pingAuthEnabled bool
+	writeTracing    bool
+	queryTracing    bool
+	pprofEnabled    bool
 }
 
 func NewHttpService(cfg *backend.ProxyConfig) (hs *HttpService) { //nolint:all
 	ip := backend.NewProxy(cfg)
 	hs = &HttpService{
-		ip:           ip,
-		token:        cfg.Token,
-		writeTracing: cfg.WriteTracing,
-		queryTracing: cfg.QueryTracing,
-		pprofEnabled: cfg.PprofEnabled,
+		ip:              ip,
+		token:           cfg.Token,
+		pingAuthEnabled: cfg.PingAuthEnabled,
+		writeTracing:    cfg.WriteTracing,
+		queryTracing:    cfg.QueryTracing,
+		pprofEnabled:    cfg.PprofEnabled,
 	}
 	return
 }
@@ -68,7 +70,10 @@ func (hs *HttpService) Register(mux *ServeMux) {
 	}
 }
 
-func (hs *HttpService) HandlerPing(w http.ResponseWriter, _ *http.Request) {
+func (hs *HttpService) HandlerPing(w http.ResponseWriter, req *http.Request) {
+	if hs.isAuthEnabled() && hs.pingAuthEnabled && !hs.checkAuth(w, req) {
+		return
+	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -331,7 +336,7 @@ func (hs *HttpService) checkMethod(w http.ResponseWriter, req *http.Request, met
 }
 
 func (hs *HttpService) checkAuth(w http.ResponseWriter, req *http.Request) bool {
-	if hs.token == "" {
+	if !hs.isAuthEnabled() {
 		return true
 	}
 	token := strings.TrimSpace(strings.TrimPrefix(req.Header.Get("Authorization"), "Token "))
@@ -340,4 +345,8 @@ func (hs *HttpService) checkAuth(w http.ResponseWriter, req *http.Request) bool 
 	}
 	hs.WriteError(w, req, http.StatusUnauthorized, "authentication failed")
 	return false
+}
+
+func (hs *HttpService) isAuthEnabled() bool {
+	return hs.token != ""
 }
